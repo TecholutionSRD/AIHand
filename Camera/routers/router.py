@@ -18,7 +18,6 @@ camera_router = APIRouter(prefix="/camera")
 
 # Load config once for efficiency
 config = load_config(CONFIG_PATH)
-
 #-------------------------------------------------------------------#
 @lru_cache()
 def get_camera():

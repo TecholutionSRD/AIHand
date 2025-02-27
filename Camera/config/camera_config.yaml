@@ -1,7 +1,19 @@
 Stream:
   Websocket_server: "ws://anubhav.ddns.net:3000"
   Websocket_topic: "/home/server"
-  save_path: "../data/captured_frames"
+  save_path: "data/captured_frames"
+  
+Video_Recorder:
+  num_samples: 1            
+  data_path: "data/recordings/" 
+  video_format: "mp4"      
+  video_fps: 5.0            
+  video_duration: 5      
+  width: 640              
+  height: 480             
+  save_all_frames: true 
+
+
 Camera:
   D435I:
     India:

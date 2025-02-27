@@ -12,6 +12,7 @@ Usage:
     Run this script directly to start the camera and display the feed.
     Press 'q' to exit the video stream.
 """
+import logging
 import uuid
 import os
 import sys

@@ -5,7 +5,7 @@ import os
 import sys
 import uvicorn
 from fastapi import FastAPI, Response
-from routers.router import camera_router
+from Camera.routers.router import camera_router
 
 # ---------------------------------------#
 app = FastAPI(title="Camera Microservice", description="AI Hand IntelRealSense Camera Microservice", version="0.1.0", docs_url="/docs", redoc_url=None)

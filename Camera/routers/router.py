@@ -4,9 +4,10 @@ This file contains all the routes for the camera microservice.
 import asyncio
 from fastapi import APIRouter
 from functools import lru_cache
+from Camera.utils.upload_video import upload_video
 from Camera.utils.camera import Camera
 from Camera.utils.camera_reciver import CameraReceiver
-from Camera.utils.videoRecorder import VideoRecorder
+from Camera.utils.video_recorder import VideoRecorder
 from Camera.config.config import load_config
 
 #-------------------------------------------------------------------#
@@ -131,4 +132,23 @@ async def record_video(num_recordings: int, action_name: str, objects: str):
     
     except Exception as e:
         print(f"[Camera Router] ERROR during recording: {e}")
+        return {"error": str(e)}
+
+@camera_router.post("/upload_video_gcp")
+async def upload_recorded_video(video_path: str):
+    """
+    Uploads a recorded video to Google Cloud Storage.
+    - `video_path`: Path to the recorded video file.
+    Returns:
+        - A JSON response containing the uploaded video URL or an error message.
+    """
+    try:
+        print(f"[Camera Router] Uploading video from path: {video_path}")
+        video_url = upload_video(video_path)
+        if video_url:
+            return {"message": "Upload successful", "video_url": video_url}
+        else:
+            return {"error": "Video upload failed"}
+    except Exception as e:
+        print(f"[Camera Router] ERROR during upload: {e}")
         return {"error": str(e)}

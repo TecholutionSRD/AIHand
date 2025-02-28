@@ -39,3 +39,6 @@ Camera:
           fy: 609.7639770507812
           distortion_model: "rs.distortion.brown_conrady"
           coeff: [0.0, 0.0, 0.0, 0.0, 0.0]
+
+GCP_BUCKET_JSON:
+  path: "../config/ai-hand.json"

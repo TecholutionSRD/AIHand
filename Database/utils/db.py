@@ -6,6 +6,9 @@ import pandas as pd
 import os
 import sys
 from pathlib import Path
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from config.config import load_config
 
@@ -51,8 +54,8 @@ def check_knowledgebase(db_config):
                 where the 'model' column is True.
     """
     base_dir = Path(db_config.get("base_dir", "./Database"))
-    grasp_db_path = base_dir / db_config.get("grasp", "grasping_data.csv")
-    action_db_path = base_dir / db_config.get("action", "action_data.csv")
+    grasp_db_path = base_dir / db_config.get("grasp", "grasp.csv")
+    action_db_path = base_dir / db_config.get("action", "action.csv")
     action_objects_db_path = base_dir / db_config.get("action_objects", "action_objects.csv")
 
     base_dir.mkdir(parents=True, exist_ok=True)
@@ -100,8 +103,11 @@ def specific_knowledge_check(db_config, name):
     grasp_db = db_config.get("grasp")
     action_db = db_config.get("action")
     action_objects_db = db_config.get("action_objects", "action_objects.csv")
-
+    
     if not all([base_dir, grasp_db, action_db]):
+        print(f'[Database] Base Dir : {base_dir}')
+        print(f'[Database] Grasp Dir : {grasp_db}')
+        print(f'[Database] Action Dir : {action_db}')
         print("[Database] Missing Database files.")
         return {"error": "Invalid database configuration"}
 
@@ -175,30 +181,25 @@ def add_grasp_data(db_config, name, grasp_distance, pickup_mode):
     Adds grasp data to the grasp database.
     
     Args:
-        db_config (dict): A dictionary containing database configuration parameters,
-                          including 'base_dir' and 'grasp' (the filename of the grasp database).
+        db_config (dict): A dictionary containing database configuration parameters.
         name (str): The name of the object/grasp.
         grasp_distance (float): The grasp distance value.
         pickup_mode (str): The pickup mode used for the grasp.
     
     Returns:
-        bool: True if the grasp data was successfully added, False otherwise.
-              Returns False if the base directory or grasp database filename is missing
-              from the configuration, or if a grasp entry with the given name already exists.
+        tuple: (bool, str) - True and success message if grasp data was added, 
+                             False and a message otherwise.
     """
 
     base_dir = db_config.get("base_dir")
     grasp_db = db_config.get("grasp")
 
     if not base_dir or not grasp_db:
-        print("[Database] Missing 'base_dir' or 'grasp' database filename in configuration.")
-        return False
+        return False, "[Database] Missing 'base_dir' or 'grasp' database filename in configuration."
 
     ensure_directory_exists(base_dir)
     grasp_db_path = os.path.join(base_dir, grasp_db)
     ensure_csv_file_exists(grasp_db_path, ["name", "grasp_distance", "pickup_mode"])
-
-    print(f"[Database] Processing grasp entry: name='{name}', grasp_distance={grasp_distance}, pickup_mode='{pickup_mode}'")
 
     try:
         grasp_df = pd.read_csv(grasp_db_path)
@@ -206,11 +207,10 @@ def add_grasp_data(db_config, name, grasp_distance, pickup_mode):
         # Ensure the CSV has the required columns
         if set(["name", "grasp_distance", "pickup_mode"]).issubset(grasp_df.columns):
             if name in grasp_df["name"].tolist():
-                print(f"[Database] Grasp entry for '{name}' already exists. Skipping addition.")
-                return False
+                return False, f"[Database] Grasp entry for '{name}' already exists."
+
         else:
-            print("[Database] CSV file is missing required columns.")
-            return False
+            return False, "[Database] CSV file is missing required columns."
 
         # Add new entry
         new_row = pd.DataFrame([[name, grasp_distance, pickup_mode]], 
@@ -218,29 +218,28 @@ def add_grasp_data(db_config, name, grasp_distance, pickup_mode):
         grasp_df = pd.concat([grasp_df, new_row], ignore_index=True)
         grasp_df.to_csv(grasp_db_path, index=False)
 
-        print(f"[Database] Successfully added grasp entry for '{name}'.")
-        return True
+        return True, f"[Database] Successfully added grasp entry for '{name}'."
 
     except Exception as e:
-        print(f"[Database] Error while adding grasp entry: {e}")
-        return False
+        return False, f"[Database] Error while adding grasp entry: {e}"
 
 def add_action_data(db_config, name, samples, model=True):
     """
     Adds action data to the action database.
+    
     Args:
-        db_config (dict): A dictionary containing the database configuration,
-                            including 'base_dir' and 'action' (filename).
+        db_config (dict): A dictionary containing the database configuration.
         name (str): The name of the action to add.
         samples (int): The number of samples associated with the action.
         model (bool, optional): A boolean indicating whether a model is
-                                    associated with the action. Defaults to True.
+                                associated with the action. Defaults to True.
+    
     Returns:
         int: The ID of the newly added action, or the existing ID if the
-                action already exists. Returns None if the database configuration
-                is incomplete.
+             action already exists. Returns None if the database configuration
+             is incomplete.
     """
-    
+
     base_dir = db_config.get("base_dir")
     action_db = db_config.get("action")
 
@@ -252,13 +251,14 @@ def add_action_data(db_config, name, samples, model=True):
     ensure_csv_file_exists(action_db_path, ["id", "name", "samples", "model"])
 
     action_df = pd.read_csv(action_db_path)
+    print("[Debug] Database Loaded")
 
     if name in action_df["name"].tolist():
         action_id = action_df[action_df["name"] == name].iloc[0]["id"]
         print(f"[Database] Action entry for '{name}' already exists with ID {action_id}.")
-        return action_id
-
-    new_id = 1 if action_df.empty else action_df["id"].max() + 1
+        return int(action_id) 
+    
+    new_id = 1 if action_df.empty else int(action_df["id"].max() + 1)
     new_row = pd.DataFrame([[new_id, name, samples, model]], 
                             columns=["id", "name", "samples", "model"])
     
@@ -271,22 +271,20 @@ def add_action_data(db_config, name, samples, model=True):
 def add_action_object(db_config, action_id, object_name):
     """
     Associates an object with an action in the action_objects database.
+    
     Args:
-        db_config (dict): A dictionary containing database configuration parameters,
-                            including 'base_dir' (the base directory for the database files)
-                            and 'action_objects' (the name of the action_objects CSV file).
+        db_config (dict): A dictionary containing database configuration parameters.
         action_id (int): The ID of the action to associate with the object.
         object_name (str): The name of the object to associate with the action.
+    
     Returns:
-        bool: True if the association was successfully added, False otherwise.
-                Returns False if the base directory is not configured or if the association
-                already exists.
+        dict: A response dictionary with success status and message.
     """
     base_dir = db_config.get("base_dir")
     action_objects_db = db_config.get("action_objects", "action_objects.csv")
 
     if not base_dir:
-        return False
+        return {"success": False, "error": "Database configuration missing"}
 
     ensure_directory_exists(base_dir)
     action_objects_db_path = os.path.join(base_dir, action_objects_db)
@@ -294,15 +292,21 @@ def add_action_object(db_config, action_id, object_name):
 
     action_objects_df = pd.read_csv(action_objects_db_path)
 
+    # Convert action_id to int to avoid numpy.int64 issues
+    action_id = int(action_id)
+
+    # Check if association already exists
     if ((action_objects_df["action_id"] == action_id) & 
         (action_objects_df["object_name"] == object_name)).any():
         print(f"[Database] Association between action ID {action_id} and object '{object_name}' already exists.")
-        return False
+        return {"success": False, "error": "Association already exists"}
 
+    # Add new association
     new_row = pd.DataFrame([[action_id, object_name]], columns=["action_id", "object_name"])
     action_objects_df = pd.concat([action_objects_df, new_row], ignore_index=True)
     action_objects_df.to_csv(action_objects_db_path, index=False)
 
     print(f"[Database] Added association between action ID {action_id} and object '{object_name}'.")
-    return True
+    return {"success": True, "message": "Association added successfully"}
+
 

@@ -4,11 +4,15 @@ This file contains all the routes for the camera microservice.
 import asyncio
 from fastapi import APIRouter
 from functools import lru_cache
-from Camera.utils.upload_video import upload_video
 from Camera.utils.camera import Camera
 from Camera.utils.camera_reciver import CameraReceiver
 from Camera.utils.video_recorder import VideoRecorder
 from Camera.config.config import load_config
+
+from Database.utils.upload_video import gcp_upload
+from Database.utils.rlef import rlef_upload
+from pydantic import BaseModel
+from typing import List
 
 #-------------------------------------------------------------------#
 # Configuration file path for the camera settings
@@ -104,20 +108,26 @@ async def capture_frame():
         return {"error": "An unexpected error occurred. Check server logs."}
 
 #-------------------------------------------------------------------#
-@camera_router.get("/record")
-async def record_video(num_recordings: int, action_name: str, objects: str):
+class RecordResponse(BaseModel):
+    """Response model for video recording"""
+    gcp_url: str
+    message: str
+
+@camera_router.post("/record", response_model=RecordResponse)
+async def record_video(action_name:str, objects:List[str]):
     """
     Records a video and saves it using the VideoRecorder class.
-    
-    - `num_recordings`: Number of times to record
+
     - `action_name`: Name of the action for labeling
     - `objects`: Comma-separated list of objects to log
     """
     try:
+        num_recordings = 1
         camera_receiver = get_camera_receiver()
         await camera_receiver.connect()
 
-        object_list = objects.split(",") if objects else []
+        # object_list = objects.split(",") if objects else []
+        object_list = objects
         recorder = VideoRecorder(camera_receiver, config, num_recordings, action_name, object_list)
 
         print(f"[Camera Router] Initiating video recording:")
@@ -126,29 +136,18 @@ async def record_video(num_recordings: int, action_name: str, objects: str):
         print(f"  - Objects: {object_list}")
         print("")
 
-        await recorder.record_video()
-
-        return {"message": f"Recording complete for action '{action_name}'", "num_recordings": num_recordings}
-    
-    except Exception as e:
-        print(f"[Camera Router] ERROR during recording: {e}")
-        return {"error": str(e)}
-
-@camera_router.post("/upload_video_gcp")
-async def upload_recorded_video(video_path: str):
-    """
-    Uploads a recorded video to Google Cloud Storage.
-    - `video_path`: Path to the recorded video file.
-    Returns:
-        - A JSON response containing the uploaded video URL or an error message.
-    """
-    try:
-        print(f"[Camera Router] Uploading video from path: {video_path}")
-        video_url = upload_video(video_path)
-        if video_url:
-            return {"message": "Upload successful", "video_url": video_url}
+        video_paths = await recorder.record_video()
+        
+        gcp_url, rlef_result = await asyncio.gather(gcp_upload([video_paths]), rlef_upload(action_name, video_paths))
+        
+        if gcp_url and rlef_result:
+            return RecordResponse(gcp_url=gcp_url, message="Video recorded and uploaded successfully to both GCP and RLEF")
+        elif gcp_url:
+            return RecordResponse(gcp_url=gcp_url, message="Video recorded and uploaded to GCP only")
         else:
-            return {"error": "Video upload failed"}
+            return RecordResponse(gcp_url="", message="Upload failed")
+
     except Exception as e:
-        print(f"[Camera Router] ERROR during upload: {e}")
-        return {"error": str(e)}
+        return RecordResponse(gcp_url="", message=f"Recording failed: {str(e)}")
+
+    

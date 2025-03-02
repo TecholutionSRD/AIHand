@@ -31,6 +31,7 @@ async def health():
     print("[DB Router] Health check requested.")
     return {"status": "OK"}
 
+#-------------------------------------------------------------------#
 @db_router.get("/check_knowledgebase")
 async def check_knowledgebase_route():
     """
@@ -44,6 +45,7 @@ async def check_knowledgebase_route():
         print(f"[DB Router] Error checking knowledge base: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+#-------------------------------------------------------------------#
 @db_router.get("/check_knowledge/{name}")
 async def specific_knowledge_check_route(name: str):
     """
@@ -57,7 +59,8 @@ async def specific_knowledge_check_route(name: str):
         print(f"[DB Router] Error checking knowledge for '{name}': {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@db_router.get("/action_objects/{action_name}")
+#-------------------------------------------------------------------#
+# @db_router.get("/action_objects/{action_name}")
 async def get_action_objects_route(action_name: str):
     """
     Endpoint to retrieve objects associated with a specific action.
@@ -69,8 +72,9 @@ async def get_action_objects_route(action_name: str):
     except Exception as e:
         print(f"[DB Router] Error retrieving objects for action '{action_name}': {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
-@db_router.post("/add_grasp")
+    
+#-------------------------------------------------------------------#
+# @db_router.post("/add_grasp")
 async def add_grasp_route(grasp_data: GraspData):
     """
     Endpoint to add grasp data to the database.
@@ -87,7 +91,8 @@ async def add_grasp_route(grasp_data: GraspData):
         print(f"[DB Router] Error adding grasp entry: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@db_router.post("/add_action")
+#-------------------------------------------------------------------#
+# @db_router.post("/add_action")
 async def add_action_route(action_data: ActionData):
     """
     Endpoint to add action data to the database.
@@ -104,7 +109,8 @@ async def add_action_route(action_data: ActionData):
         print(f"[DB Router] Error adding action entry: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@db_router.post("/add_action_object")
+#-------------------------------------------------------------------#
+# @db_router.post("/add_action_object")
 async def add_action_object_route(action_object_data: ActionObjectData):
     """
     Endpoint to associate an object with an action in the database.
@@ -120,3 +126,5 @@ async def add_action_object_route(action_object_data: ActionObjectData):
     except Exception as e:
         print(f"[DB Router] Error adding action-object association: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+#-------------------------------------------------------------------#
+

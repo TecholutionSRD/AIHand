@@ -28,13 +28,11 @@ class VideoRecorder:
         self.num_recordings = num_recordings
         self.action_name = action_name
         self.objects = objects
-        self.sample_count = 0
+        self.sample_count = len([d for d in os.listdir(f"{self.output_dir}/{self.action_name}") 
+                    if os.path.isdir(f"{self.output_dir}/{self.action_name}/{d}") and d.startswith("sample_")]) if os.path.exists(f"{self.output_dir}/{self.action_name}") else 0
 
         os.makedirs(self.output_dir, exist_ok=True)
-
-        existing_samples = [d for d in os.listdir(self.output_dir) if d.startswith("sample_")]
-        self.sample_count = len(existing_samples)
-
+        print(f"[Video Recorder] Count : {self.sample_count}")
         self.has_display = os.environ.get('DISPLAY') is not None
 
     def create_sample_directory(self):
@@ -138,7 +136,8 @@ class VideoRecorder:
             out.release()
             print("")
             print(f"[Video Recorder] Recording completed - Video and frames saved in {sample_folder}")
-
+            return video_path
+        
     async def display_live_feed(self):
         """
         Displays the live feed from the receiver after recording completes.

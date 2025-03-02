@@ -2,3 +2,8 @@ env
 ***__pycache__
 .env
 Camera/config/ai-hand.json
+data
+*.pyc
+__pycache__/
+*/__pycache__/
+**/*.pyc

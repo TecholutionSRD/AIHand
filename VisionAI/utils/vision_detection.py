@@ -24,7 +24,6 @@ gemini_api_key = os.getenv("GEMINI_API_KEY")
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from VisionAI.utils.utils import *
 
-
 class GeminiInference:
     """
     Gemini Inference is the class used for various inference tasks using Google's Gemini Model.
@@ -111,7 +110,7 @@ class GeminiInference:
         """Enable or disable capture mode."""
         self.capture_state = state
 
-    def get_object_center(self, image: Image.Image, target_class: str) -> Optional[Dict]:
+    async def get_object_center(self, camera, target_class: str) -> Optional[Dict]:
         """
         Get the center and bounding box of a detected object.
 
@@ -122,6 +121,10 @@ class GeminiInference:
         Returns:
             dict: Contains center coordinates, bounding box, and confidence score.
         """
+        frames = await camera.capture_frame()
+        color_frame_path = frames.get("rgb")
+
+        image = Image.open(color_frame_path)
         self.process_frame(image)
         results = self.get_process_frame_results()
 
@@ -137,8 +140,8 @@ class GeminiInference:
 
         print(f"[Detect] Normalized Box: {box}")
         self.detection_results = detection_results
-
-        return detection_results
+        print(f"[Detect] Detection Results", self.detection_results)
+        return self.detection_results
 
     async def detect(self, camera, target_class: List[str] = ["red soda can"]):
         """

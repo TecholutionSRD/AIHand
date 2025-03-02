@@ -38,3 +38,17 @@ Camera:
           fy: 609.7639770507812
           distortion_model: "rs.distortion.brown_conrady"
           coeff: [0.0, 0.0, 0.0, 0.0, 0.0]
+
+DataBase:
+  base_dir: "Database/"
+  grasp: "grasps.csv"
+  action: "actions.csv"
+  action_objects: "action_objects.csv"
+
+RLEF:
+  base_url: "https://autoai-backend-exjsxe2nda-uc.a.run.app/model"
+  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBOYW1lIjoiQUkgSGFuZCIsInVzZXJFbWFpbCI6ImFiaGlyYW0ua2FtaW5pQHRlY2hvbHV0aW9uLmNvbSIsInVzZXJJZCI6IjY1MWU1NTZjZWNhZGYzMjY5MzhlZWNkZCIsInNjb3BlT2ZUb2tlbiI6eyJwcm9qZWN0SWQiOiI2NGMxMGE2Mzk1MTEzMjc3OTI1YTgwZGYiLCJzY29wZXMiOnsicHJvamVjdCI6eyJyZWFkIjp0cnVlLCJ1cGRhdGUiOnRydWUsImRlbGV0ZSI6dHJ1ZSwiY3JlYXRlIjp0cnVlfSwicmVzb3VyY2UiOnsicmVhZCI6dHJ1ZSwidXBkYXRlIjp0cnVlLCJkZWxldGUiOnRydWUsImNyZWF0ZSI6dHJ1ZX0sIm1vZGVsIjp7InJlYWQiOnRydWUsInVwZGF0ZSI6dHJ1ZSwiZGVsZXRlIjp0cnVlLCJjcmVhdGUiOnRydWV9LCJkYXRhU2V0Q29sbGVjdGlvbiI6eyJyZWFkIjp0cnVlLCJ1cGRhdGUiOnRydWUsImRlbGV0ZSI6dHJ1ZSwiY3JlYXRlIjp0cnVlfSwibW9kZWxDb2xsZWN0aW9uIjp7InJlYWQiOnRydWUsInVwZGF0ZSI6dHJ1ZSwiZGVsZXRlIjp0cnVlLCJjcmVhdGUiOnRydWV9LCJ0ZXN0Q29sbGVjdGlvbiI6eyJyZWFkIjp0cnVlLCJ1cGRhdGUiOnRydWUsImRlbGV0ZSI6dHJ1ZSwiY3JlYXRlIjp0cnVlfSwiY29waWxvdCI6eyJyZWFkIjp0cnVlLCJ1cGRhdGUiOnRydWUsImRlbGV0ZSI6dHJ1ZSwiY3JlYXRlIjp0cnVlfSwiY29waWxvdFJlc291cmNlIjp7InJlYWQiOnRydWUsInVwZGF0ZSI6dHJ1ZSwiZGVsZXRlIjp0cnVlLCJjcmVhdGUiOnRydWV9LCJtb2RlbEdyb3VwIjp7InJlYWQiOnRydWUsInVwZGF0ZSI6dHJ1ZSwiZGVsZXRlIjp0cnVlLCJjcmVhdGUiOnRydWV9fX0sImlhdCI6MTczOTM3MzA1NX0.Q-CIyVoOAw6FmSIPeWn3_PGruLQLkp1e5xvfvSs4LHs"
+  model_group_id: "678a262dc441e0b2c81a9686"
+  project_id: "64c10a6395113277925a80df"
+  task_type: "videoAnnotation"
+  url: 'https://autoai-backend-exjsxe2nda-uc.a.run.app/resource/'

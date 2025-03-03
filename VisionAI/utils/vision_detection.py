@@ -244,13 +244,3 @@ class GeminiInference:
         ymin, xmin, ymax, xmax = box
         return [xmin / 1000 * width, ymin / 1000 * height, xmax / 1000 * width, ymax / 1000 * height]
 
-
-# if __name__ == "__main__":
-#     async def main():
-#         config = load_config("config/config.yaml")
-#         camera = CameraReceiver(config)
-#         gemini = GeminiInference(config)
-#         detected_objects = await gemini.detect(camera, target_class=["bottle"])
-#         print(f"[Detect] Final Detected Objects: {detected_objects}")
-
-#     asyncio.run(main())

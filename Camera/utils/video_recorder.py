@@ -11,7 +11,6 @@ from PIL import Image
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from Camera.utils.camera_reciver import CameraReceiver
-from Camera.config.config import load_config
 
 class VideoRecorder:
     """
@@ -154,18 +153,3 @@ class VideoRecorder:
             print(f"[Video Recorder] ERROR displaying live feed: {traceback.format_exc()}")
         finally:
             cv2.destroyAllWindows()
-
-if __name__ == "__main__":
-    config = load_config("config/config.yaml")
-    receiver = CameraReceiver(config)
-    num_recordings = 1
-    action_name = "pouring"
-    objects = ["red soda can", "white cup"]
-
-    async def main():
-        await receiver.connect()
-        recorder = VideoRecorder(receiver, config, num_recordings, action_name, objects)
-        await recorder.record_video()
-        await recorder.display_live_feed()
-
-    asyncio.run(main())

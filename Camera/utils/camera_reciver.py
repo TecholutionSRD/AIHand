@@ -14,7 +14,7 @@ import sys
 import pyrealsense2 as rs
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from config.config import load_config
+from Config.config import load_config
 
 class CameraReceiver:
     """

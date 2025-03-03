@@ -1,4 +1,4 @@
-# AI Hand
+# AIHand-backend
 
 ## Overview
 

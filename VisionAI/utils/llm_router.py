@@ -15,7 +15,7 @@ import json_repair
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir)))
 from Database.utils.db import check_knowledgebase, get_action_objects
-from config.config import load_config
+from Config.config import load_config
 
 load_dotenv()
 gemini_api_key = os.getenv("GEMINI_API_KEY")
@@ -75,7 +75,7 @@ async def query_router(user_query: str, mode: str, camera=None, gemini=None, con
         config: Configuration dictionary
     """
     # Configure Gemini
-    config = load_config("VisionAI/config/vision_ai_config.yaml")['Gemini']
+    config = load_config("vision_ai_config.yaml")['Gemini']
     genai.configure(api_key=gemini_api_key)
     model = genai.GenerativeModel(config.get("model_name", 'gemini-1.5-flash-002'))
     print(f"[LLM Router] Model Loaded")

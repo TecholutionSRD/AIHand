@@ -8,14 +8,30 @@ from pathlib import Path
 from typing import Optional
 from google.cloud import storage
 from google.cloud.exceptions import GoogleCloudError
+from dotenv import load_dotenv
+import json
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from config.config import load_config
+from Config.config import load_config
 
-# Load configuration
-config = load_config("Camera/config/camera_config.yaml")['GCP_BUCKET_JSON']
-GCP_CREDENTIALS = config.get("gcp_credentials", "../config/ai-hand.json")
+config = load_config("camera_config.yaml")['GCP_BUCKET_JSON']
 BUCKET_NAME = config.get("bucket_name", "video-analysing")
+
+load_dotenv()
+
+GCP_CREDENTIALS_PATH = os.getenv("GCP_CREDENTIALS_PATH")
+
+if not GCP_CREDENTIALS_PATH:
+    raise EnvironmentError("GCP_CREDENTIALS_PATH is not set in the .env file.")
+
+try:
+    with open(GCP_CREDENTIALS_PATH, "r") as f:
+        GCP_CREDENTIALS = json.load(f)
+    print("GCP credentials loaded successfully.")
+except FileNotFoundError:
+    raise FileNotFoundError(f"GCP credentials file not found at {GCP_CREDENTIALS_PATH}")
+except json.JSONDecodeError:
+    raise ValueError(f"Invalid JSON format in {GCP_CREDENTIALS_PATH}")
 
 
 def upload_video(source_path: str) -> Optional[str]:

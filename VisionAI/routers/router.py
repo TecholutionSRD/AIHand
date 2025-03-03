@@ -5,11 +5,11 @@ from functools import lru_cache
 import asyncio
 from VisionAI.utils.llm_router import query_router
 from VisionAI.utils.vision_detection import GeminiInference
-from VisionAI.config.config import load_config
+from Config.config import load_config
 from Camera.utils.camera_reciver import CameraReceiver
 #-------------------------------------------------------------------#
 # Configuration file path for the camera settings
-CONFIG_PATH = "VisionAI/config/vision_ai_config.yaml"
+CONFIG_PATH = "vision_ai_config.yaml"
 
 # Create an API router with a prefix for all vision-related routes
 visionai_router = APIRouter(prefix="/vision_ai")

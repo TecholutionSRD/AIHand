@@ -2,9 +2,9 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 from Database.utils.db import *
-from Database.config.config import load_config
+from Config.config import load_config
 #-------------------------------------------------------------------#
-CONFIG_PATH = "Database/config/db_config.yaml"
+CONFIG_PATH = "db_config.yaml"
 
 db_router = APIRouter(prefix="/database")
 

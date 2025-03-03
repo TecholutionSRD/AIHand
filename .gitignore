@@ -1,9 +1,20 @@
+# Ignore virtual environment directories
 env
-***__pycache__
-.env
-Camera/config/ai-hand.json
-data
+
+# Ignore Python cache files and directories
 *.pyc
+**/*.pyc
 __pycache__/
 */__pycache__/
-**/*.pyc
+***__pycache__
+
+# Ignore environment variables file
+.env
+
+# Ignore AI-Hand config file in Camera/config
+Camera/config/ai-hand.json\
+~/.config/gcp/ai-hand.json
+Config/gcp/ai-hand.json
+
+# Ignore data directory (captured frames, etc.)
+data/

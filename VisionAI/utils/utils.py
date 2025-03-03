@@ -9,7 +9,7 @@ import pyrealsense2 as rs
 import itertools
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from config.config import load_config
+from Config.config import load_config
 
 def load_camera_config():
     """
@@ -18,7 +18,7 @@ def load_camera_config():
     Returns:
         dict: Camera transformation and intrinsic parameters.
     """
-    return load_config("VisionAI/config/vision_ai_config.yaml")['Camera']['D435I']['India']
+    return load_config("vision_ai_config.yaml")['Camera']['D435I']['India']
 
 #----------------------------------------------------------------#
 def get_valid_depth(depth_array, x, y):

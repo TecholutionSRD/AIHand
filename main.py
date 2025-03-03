@@ -9,9 +9,8 @@ from Camera.routers.router import camera_router
 from VisionAI.routers.router import visionai_router
 from Database.routers.router import db_router
 
-
 # ---------------------------------------#
-app = FastAPI(title="AI Hand", description="AI Hand Microservices", version="0.1.0", docs_url="/docs", redoc_url="/ddocs")
+app = FastAPI(title="AI Hand", description="AI Hand Microservices", version="0.1.0", docs_url="/docs", redoc_url="/rdocs")
 # ---------------------------------------#
 
 # ---------------------------------------#

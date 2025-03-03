@@ -7,7 +7,7 @@ from functools import lru_cache
 from Camera.utils.camera import Camera
 from Camera.utils.camera_reciver import CameraReceiver
 from Camera.utils.video_recorder import VideoRecorder
-from Camera.config.config import load_config
+from Config.config import load_config
 
 from Database.utils.upload_video import gcp_upload
 from Database.utils.rlef import rlef_upload
@@ -16,7 +16,7 @@ from typing import List
 
 #-------------------------------------------------------------------#
 # Configuration file path for the camera settings
-CONFIG_PATH = "Camera/config/camera_config.yaml"
+CONFIG_PATH = "camera_config.yaml"
 
 # Create an API router with a prefix for all camera-related routes
 camera_router = APIRouter(prefix="/camera")

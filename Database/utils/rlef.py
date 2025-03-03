@@ -6,7 +6,7 @@ import os
 import requests
 from typing import Optional
 
-from config.config import load_config
+from Config.config import load_config
 
 class RLEFManager:
     """
@@ -148,7 +148,7 @@ class RLEFManager:
 
 async def rlef_upload(video_paths,action_name):
     try:
-        rlef_config = load_config("Database/config/config.yaml")['RLEF']
+        rlef_config = load_config("db_config.yaml")['RLEF']
         manager = RLEFManager(rlef_config)
         task_id = manager.get_or_create_task(action_name)
         print(f"[RLEF] Current_Task_ID: {task_id}")
@@ -160,7 +160,7 @@ async def rlef_upload(video_paths,action_name):
         return False
 
 if __name__ == "__main__":
-    config = load_config("../config/config.yaml").get("RLEF", {})
+    config = load_config("db_config.yaml").get("RLEF", {})
     
     try:
         manager = RLEFManager(config)

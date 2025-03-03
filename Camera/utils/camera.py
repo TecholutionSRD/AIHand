@@ -19,9 +19,9 @@ import sys
 import pyrealsense2 as rs
 import numpy as np
 import cv2
+from Config.config import load_config
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from config.config import load_config
-
+ 
 class Camera:
     """
     A class to manage an Intel RealSense D435i camera.
@@ -126,6 +126,3 @@ class Camera:
             print(f"[Camera] Error checking camera connection: {e}")
             return False
 
-if __name__ == "__main__":
-    cam = Camera("../config/camera_config.yaml")
-    cam.is_connected()

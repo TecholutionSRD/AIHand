@@ -10,9 +10,9 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from config.config import load_config
+from Config.config import load_config
 
-config = load_config("Database/config/db_config.yaml")
+config = load_config("db_config.yaml")
 db_config = config.get("DataBase", {})
 
 #--------------------------------------------------------------#

@@ -11,6 +11,7 @@ def get_config_path(config_name):
         'camera_config.yaml': os.path.join(BASE_DIR,'Config', 'camera_config.yaml'),
         'db_config.yaml': os.path.join(BASE_DIR,'Config', 'db_config.yaml'),
         'vision_ai_config.yaml': os.path.join(BASE_DIR, 'Config', 'vision_ai_config.yaml'),
+        'basic_ai_config.yaml': os.path.join(BASE_DIR, 'Config', 'basic_ai_config.yaml')
     }
     return config_paths.get(config_name)
 

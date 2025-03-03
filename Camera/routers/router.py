@@ -4,13 +4,13 @@ This file contains all the routes for the camera microservice.
 import asyncio
 from fastapi import APIRouter
 from functools import lru_cache
-from Camera.utils.camera import Camera
-from Camera.utils.camera_reciver import CameraReceiver
-from Camera.utils.video_recorder import VideoRecorder
+from Camera.functions.camera import Camera
+from Camera.functions.camera_reciver import CameraReceiver
+from Camera.functions.video_recorder import VideoRecorder
 from Config.config import load_config
 
-from Database.utils.upload_video import gcp_upload
-from Database.utils.rlef import rlef_upload
+from Database.functions.upload_video import gcp_upload
+from Database.functions.rlef import rlef_upload
 from pydantic import BaseModel
 from typing import List
 

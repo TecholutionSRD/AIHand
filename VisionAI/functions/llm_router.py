@@ -75,7 +75,7 @@ async def query_router(user_query: str, mode: str, camera=None, gemini=None, con
         config: Configuration dictionary
     """
     # Configure Gemini
-    config = load_config("VisionAI/config/vision_ai_config.yaml")['Gemini']
+    config = load_config("vision_ai_config.yaml")['Gemini']
     genai.configure(api_key=gemini_api_key)
     model = genai.GenerativeModel(config.get("model_name", 'gemini-1.5-flash-002'))
     print(f"[LLM Router] Model Loaded")

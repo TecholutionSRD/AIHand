@@ -10,7 +10,7 @@ import traceback
 from PIL import Image
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from Camera.utils.camera_reciver import CameraReceiver
+from Camera.functions.camera_reciver import CameraReceiver
 
 class VideoRecorder:
     """

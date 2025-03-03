@@ -1,0 +1,91 @@
+# ==============================
+# Architecture Configuration
+# ==============================
+Architecture:
+  NeuralNet:
+    input_shape: 6
+    output_shape: 64
+    dropout: 0.1
+    num_epochs: 100
+    batch_size: 8
+    weight_decay: 0.00001
+    lr: 0.001
+    patience: 10
+    checkpoint_dir: 'checkpoints'
+    dataset: 'dataset/dataset.csv'
+
+# ==============================
+# 4D Data Processing Configuration
+# ==============================
+4D:
+  base_recordings_dir: "data/recordings"
+  classes: ["red soda can"]
+  url: "http://techolution.ddns.net:5000/process_pose"
+  url_orientation: "http://techolution.ddns.net:5001/process_pose"
+  fps: 2
+  num_samples: 16
+  final_csv: "merged_predictions_hamer.csv"
+  output_path_for_verification: "test/"
+  hamer_selected_points: [0, 1, 5, 9, 13, 17]
+  orientation_selected_points: [0,1,2,3,4,5,6,7,8,9, 13, 17]
+
+# ==============================
+# Cobot Pose Model Configuration
+# ==============================
+  cobot_pose_model:
+    model_path: 'cobot_pose_model.keras'
+    input_scaler: 'input_scaler.pkl'
+    output_scaler: 'output_scaler.pkl'
+    device: '/CPU:0'
+
+# ==============================
+# Camera Intrinsics
+# ==============================
+  Intrinsics:
+    India:
+      width: 640
+      height: 480
+      ppx: 329.1317443847656
+      ppy: 240.29669189453125
+      fx: 611.084594726562
+      fy: 609.7639770507812
+      distortion_model: "rs.distortion.brown_conrady"
+      coeff: [0.0, 0.0, 0.0, 0.0, 0.0]
+    
+    US:
+      width: 640
+      height: 480
+      ppx: 329.1317443847656
+      ppy: 240.29669189453125
+      fx: 611.084594726562
+      fy: 609.7639770507812
+      distortion_model: "rs.distortion.brown_conrady"
+      coeff: [0.0, 0.0, 0.0, 0.0, 0.0]
+
+# ==============================
+# Transformation Matrices
+# ==============================
+  Transformation:
+    India:
+      X: 
+        - [0.068, -0.986, 0.152, -0.108]
+        - [0.998, 0.065, -0.023, 0.0]
+        - [0.013, 0.153, 0.988, -0.044]
+        - [0.0, 0.0, 0.0, 1.0]
+      Y:
+        - [-0.47, 0.587, -0.659, 0.73929]
+        - [0.877, 0.392, -0.276, -0.16997]
+        - [0.096, -0.708, -0.7, 0.86356]
+        - [0.0, 0.0, 0.0, 1.0]
+    
+    US:
+      X: 
+        - [0.068, -0.986, 0.152, -0.108]
+        - [0.998, 0.065, -0.023, 0.0]
+        - [0.013, 0.153, 0.988, -0.044]
+        - [0.0, 0.0, 0.0, 1.0]
+      Y:
+        - [-0.47, 0.587, -0.659, 0.73929]
+        - [0.877, 0.392, -0.276, -0.16997]
+        - [0.096, -0.708, -0.7, 0.86356]
+        - [0.0, 0.0, 0.0, 1.0]

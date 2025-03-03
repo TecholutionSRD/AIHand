@@ -3,16 +3,16 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict
 from functools import lru_cache
 import asyncio
-from VisionAI.utils.llm_router import query_router
-from VisionAI.utils.vision_detection import GeminiInference
+from VisionAI.functions.llm_router import query_router
+from VisionAI.functions.vision_detection import GeminiInference
 from Config.config import load_config
-from Camera.utils.camera_reciver import CameraReceiver
+from Camera.functions.camera_reciver import CameraReceiver
 #-------------------------------------------------------------------#
 # Configuration file path for the camera settings
 CONFIG_PATH = "vision_ai_config.yaml"
 
 # Create an API router with a prefix for all vision-related routes
-visionai_router = APIRouter(prefix="/vision_ai")
+visionai_router = APIRouter(prefix="/vision")
 
 # Load config once for efficiency
 config = load_config(CONFIG_PATH)

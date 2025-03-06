@@ -17,7 +17,7 @@ from BasicAI.functions.dataset.dataloader import data_loader, save_scalers
 from Config.config import load_config
 
 
-def train(input_shape, output_shape, file_path, num_epochs, batch_size, weight_decay, lr, patience, checkpoint_dir):
+def train(config_path:Path, input_shape:int, output_shape:int, file_path:Path):
     """
     Trains the Trajectory Prediction model with early stopping and model checkpointing.
 
@@ -35,6 +35,16 @@ def train(input_shape, output_shape, file_path, num_epochs, batch_size, weight_d
     Returns:
     - None
     """
+    config = load_config(config_path)['Architecture']['NeuralNet']
+    input_shape = input_shape 
+    output_shape = output_shape
+    dropout = config['dropout']
+    num_epochs = config['num_epochs']
+    batch_size = config['batch_size']
+    weight_decay = config['weight_decay']
+    lr = config['lr']
+    patience = config['patience']
+    checkpoint_dir = config['checkpoint_dir']
     checkpoint_dir = Path(checkpoint_dir)
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
@@ -47,7 +57,16 @@ def train(input_shape, output_shape, file_path, num_epochs, batch_size, weight_d
     dataset_loader, input_scaler, output_scaler = data_loader(file_path, batch_size=batch_size, shuffle=True)
 
     print("[Trainer] Initializing model...")
-    model = TrajectoryModel(input_shape, output_shape)
+    print("-" * 100)
+    print(f"[Trainer] Input :  {input_shape}")
+    print(f"[Trainer] Output :  {output_shape}")
+    print(f"[Trainer] Dropout: {config.get('dropout', 0.1)}")
+    print(f"[Trainer] Number of Epochs: {config.get('num_epochs', 100)}")
+    print(f"[Trainer] Batch Size: {config.get('batch_size', 8)}")
+    print(f"[Trainer] Weight Decay: {config.get('weight_decay', 0.00001)}")
+    print(f"[Trainer] Learning Rate: {config.get('lr', 0.001)}")
+    print(f"[Trainer] Patience: {config.get('patience', 10)}")
+    model = TrajectoryModel(input_shape, output_shape, dropout_rate=dropout)
 
     # Initialize weights
     for m in model.modules():

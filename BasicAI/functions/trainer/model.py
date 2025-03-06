@@ -5,6 +5,7 @@ optimized for a small dataset of 60 samples.
 """
 import torch
 import torch.nn as nn
+from Config.config import load_config
 
 class TrajectoryModel(nn.Module):
     """
@@ -19,7 +20,7 @@ class TrajectoryModel(nn.Module):
         torch.Tensor: The output tensor of shape (batch_size, output_shape).
     """
     def __init__(self, input_shape=6, output_shape=64, dropout_rate=0.1):
-        super(Model, self).__init__()
+        super(TrajectoryModel, self).__init__()
         
         self.fc1 = nn.Linear(input_shape, 64)
         self.bn1 = nn.BatchNorm1d(64)
@@ -57,6 +58,23 @@ class TrajectoryModel(nn.Module):
         
         return x
     
+#-------------------------------------------------------------------------------------------#
+def build_model(config_path: str, input_shape:int, output:int):
+    config = load_config(config_path)['Architecture']['NeuralNet']
+    print("[Architecture] Model Architecture")
+    print("-" * 100)
+    print(f"[Training] Input :  {input_shape}")
+    print(f"[Training] Output :  {output}")
+    print(f"[Training] Dropout: {config.get('dropout', 0.1)}")
+    print(f"[Training] Number of Epochs: {config.get('num_epochs', 100)}")
+    print(f"[Training] Batch Size: {config.get('batch_size', 8)}")
+    print(f"[Training] Weight Decay: {config.get('weight_decay', 0.00001)}")
+    print(f"[Training] Learning Rate: {config.get('lr', 0.001)}")
+    print(f"[Training] Patience: {config.get('patience', 10)}")
+    model = TrajectoryModel(input_shape, output, config.get('dropout', 0.1))
+    print("[Model] Model Built")
+    return model
+
 if __name__ == "__main__":
     model = TrajectoryModel()
     x = torch.randn(10, 6)

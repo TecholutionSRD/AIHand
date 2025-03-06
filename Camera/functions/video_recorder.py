@@ -63,7 +63,7 @@ class VideoRecorder:
 
         except Exception as e:
             print(f"[Video Recorder] ERROR capturing initial frames: {traceback.format_exc()}")
-
+            
     async def record_video(self):
         """
         Records videos based on the number of samples in the configuration.
@@ -82,13 +82,17 @@ class VideoRecorder:
 
             await self.capture_initial_frames(sample_folder)
             
+            # Countdown phase - no recording during this time
             print("")
             for i in range(5, 0, -1):
                 print(f"\r[Video Recorder] Countdown: {i} seconds remaining", end="")
-                await asyncio.sleep(1)
+            
+            _, _ = await self.receiver.decode_frames()
+            await asyncio.sleep(1)
+
+            print("\n[Video Recorder] Starting recording now!")
 
             video_path = os.path.join(sample_folder, f"{self.action_name}_video.{self.config['video_format']}")
-            print("")
             print(f"[Video Recorder] Video will be saved to: {video_path}")
 
             fourcc = cv2.VideoWriter_fourcc(*"mp4v")
@@ -99,6 +103,7 @@ class VideoRecorder:
                 print("[Video Recorder] ERROR: VideoWriter failed to open")
                 return
 
+            # Recording phase starts here
             start_time = time.time()
             frame_time = 1.0 / self.config['video_fps']
             total_frames = int(self.config['video_duration'] * self.config['video_fps'])
@@ -117,9 +122,9 @@ class VideoRecorder:
                         color_frame = cv2.cvtColor(color_frame, cv2.COLOR_BGR2RGB)
                         out.write(color_frame)
 
-                        frame_filename = f"{self.action_name}_image_{frame_count:03d}.png"
-                        rgb_path = os.path.join(sample_folder, "rgb", frame_filename)
-                        cv2.imwrite(rgb_path, color_frame)
+                    frame_filename = f"{self.action_name}_image_{frame_count:03d}.png"
+                    rgb_path = os.path.join(sample_folder, "rgb", frame_filename)
+                    cv2.imwrite(rgb_path, color_frame)
 
                     if depth_frame is not None:
                         depth_path = os.path.join(sample_folder, "depth", f"{self.action_name}_image_{frame_count:03d}.npy")
@@ -136,7 +141,7 @@ class VideoRecorder:
             print("")
             print(f"[Video Recorder] Recording completed - Video and frames saved in {sample_folder}")
             return video_path
-        
+
     async def display_live_feed(self):
         """
         Displays the live feed from the receiver after recording completes.

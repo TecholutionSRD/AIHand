@@ -10,7 +10,7 @@ from Camera.functions.video_recorder import VideoRecorder
 from Config.config import load_config
 
 from Database.functions.upload_video import gcp_upload
-from Database.functions.rlef import rlef_upload
+from Database.functions.rlef import RLEFManager
 from pydantic import BaseModel
 from typing import List
 
@@ -108,46 +108,46 @@ async def capture_frame():
         return {"error": "An unexpected error occurred. Check server logs."}
 
 #-------------------------------------------------------------------#
-class RecordResponse(BaseModel):
-    """Response model for video recording"""
-    gcp_url: str
-    message: str
+# class RecordResponse(BaseModel):
+#     """Response model for video recording"""
+#     gcp_url: str
+#     message: str
 
-@camera_router.post("/record", response_model=RecordResponse)
-async def record_video(action_name:str, objects:List[str]):
-    """
-    Records a video and saves it using the VideoRecorder class.
+# @camera_router.post("/record", response_model=RecordResponse)
+# async def record_video(action_name:str, objects:List[str]):
+#     """
+#     Records a video and saves it using the VideoRecorder class.
 
-    - `action_name`: Name of the action for labeling
-    - `objects`: Comma-separated list of objects to log
-    """
-    try:
-        num_recordings = 1
-        camera_receiver = get_camera_receiver()
-        await camera_receiver.connect()
+#     - `action_name`: Name of the action for labeling
+#     - `objects`: Comma-separated list of objects to log
+#     """
+#     try:
+#         num_recordings = 1
+#         camera_receiver = get_camera_receiver()
+#         await camera_receiver.connect()
 
-        # object_list = objects.split(",") if objects else []
-        object_list = objects
-        recorder = VideoRecorder(camera_receiver, config, num_recordings, action_name, object_list)
+#         # object_list = objects.split(",") if objects else []
+#         object_list = objects
+#         recorder = VideoRecorder(camera_receiver, config, num_recordings, action_name, object_list)
 
-        print(f"[Camera Router] Initiating video recording:")
-        print(f"  - Number of recordings: {num_recordings}")
-        print(f"  - Action: '{action_name}'")
-        print(f"  - Objects: {object_list}")
-        print("")
+#         print(f"[Camera Router] Initiating video recording:")
+#         print(f"  - Number of recordings: {num_recordings}")
+#         print(f"  - Action: '{action_name}'")
+#         print(f"  - Objects: {object_list}")
+#         print("")
 
-        video_paths = await recorder.record_video()
+#         video_paths = await recorder.record_video()
         
-        gcp_url, rlef_result = await asyncio.gather(gcp_upload([video_paths]), rlef_upload(action_name, video_paths))
+    #     # gcp_url, rlef_result = await asyncio.gather(gcp_upload([video_paths]), rlef_upload(action_name, video_paths))
         
-        if gcp_url and rlef_result:
-            return RecordResponse(gcp_url=gcp_url, message="Video recorded and uploaded successfully to both GCP and RLEF")
-        elif gcp_url:
-            return RecordResponse(gcp_url=gcp_url, message="Video recorded and uploaded to GCP only")
-        else:
-            return RecordResponse(gcp_url="", message="Upload failed")
+    #     if gcp_url and rlef_result:
+    #         return RecordResponse(gcp_url=gcp_url, message="Video recorded and uploaded successfully to both GCP and RLEF")
+    #     elif gcp_url:
+    #         return RecordResponse(gcp_url=gcp_url, message="Video recorded and uploaded to GCP only")
+    #     else:
+    #         return RecordResponse(gcp_url="", message="Upload failed")
 
-    except Exception as e:
-        return RecordResponse(gcp_url="", message=f"Recording failed: {str(e)}")
+    # except Exception as e:
+    #     return RecordResponse(gcp_url="", message=f"Recording failed: {str(e)}")
 
     

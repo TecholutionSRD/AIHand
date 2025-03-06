@@ -76,7 +76,8 @@ class PreProcessor:
     def _generate_merged_csv(self):
         """Use `VideoProcessor4D` to generate the merged CSV file."""
         print("[PreProcessor] Generating merged CSV...")
-        self.processor.merge_all_processed_csv(self.action_dir)
+        #TODO: Pass main folder not action.
+        self.processor.merge_all_processed_csv(self.action_dir,action)
         print(f"[PreProcessor] Merged CSV saved at {self.merged_csv_path}")
 
     async def process_hamer(self, action_name: str, objects: list[tuple[str, str]]):

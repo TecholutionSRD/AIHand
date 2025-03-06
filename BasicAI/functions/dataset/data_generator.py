@@ -17,7 +17,7 @@ import pandas as pd
 import pyrealsense2 as rs
 import csv
 from pathlib import Path
-
+import cv2
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from BasicAI.functions.dataset.gemini_object_detector import ObjectDetector
 from BasicAI.functions.dataset.utils import base64_to_csv_path, create_zip_archive,deproject_pixel_to_point,get_base64_encoded_hamer_response
@@ -123,14 +123,15 @@ class VideoProcessor4D:
         Note:
             The run_complete_processing_pipeline method is expected to be defined elsewhere in the class.
         """
-        for folder_name in os.listdir(self.base_recordings_dir):
-            subfolder_path = os.path.join(self.base_recordings_dir, folder_name)
+        filedir = Path(f"{self.base_recordings_dir}/{action}")
+        for folder_name in os.listdir(filedir):
+            subfolder_path = os.path.join(filedir, folder_name)
             if not os.path.isdir(subfolder_path):
                 continue
 
             print(f"[Hamer] Processing {subfolder_path}")
             output_csv_path = os.path.join(subfolder_path, "processed_predictions_hamer.csv")
-
+        
             try:
                 self.run_complete_processing_pipeline(subfolder_path, self.fps, self.classes, output_csv_path, action)
             except Exception as e:
@@ -182,7 +183,7 @@ class VideoProcessor4D:
         temp_rgb_dir, temp_depth_dir = os.path.join(tempfile.gettempdir(), 'temp_rgb'), os.path.join(tempfile.gettempdir(), 'temp_depth')
         os.makedirs(temp_rgb_dir, exist_ok=True)
         os.makedirs(temp_depth_dir, exist_ok=True)
-
+        temp_rgb_dir
         rgb_dir, depth_dir = os.path.join(recording_dir, 'rgb'), os.path.join(recording_dir, 'depth')
         rgb_files, depth_files = glob.glob(os.path.join(rgb_dir, '*.[pj][np][g]*')), glob.glob(os.path.join(depth_dir, '*.npy'))
 
@@ -191,6 +192,8 @@ class VideoProcessor4D:
         for i, depth_path in enumerate(sorted(depth_files)):
             shutil.copy(depth_path, os.path.join(temp_depth_dir, f'image_{i}.npy'))
 
+        temp_rgb_dir = f"{recording_dir}/rgb/"
+        temp_depth_dir = f"{recording_dir}/depth"
         rgb_zip_path, depth_zip_path = os.path.join(recording_dir, 'rgb_images_collection.zip'), os.path.join(recording_dir, 'depth_images_collection.zip')
         create_zip_archive(temp_rgb_dir, rgb_zip_path)
         create_zip_archive(temp_depth_dir, depth_zip_path)
@@ -206,22 +209,15 @@ class VideoProcessor4D:
 
     def detect_initial_object_centers(self, recording_dir: Path, classes: list[str]):
         """
-        Initializes the centers of objects in the initial frame of a recording.
-        This method uses an object detection model to find the centers of specified objects in an RGB image,
-        and then deprojects these 2D centers to 3D coordinates using a depth image and camera intrinsics.
-        The 3D coordinates are then transformed and stored in a dictionary.
+        Initializes the centers of objects in the initial frame of a recording and plots detected centers.
         Args:
             recording_dir (Path): The directory containing the recording data.
             classes (list[str]): A list of object class names to detect.
         Returns:
             dict: A dictionary where keys are object class names and values are lists of transformed 3D coordinates [x, y, z].
-        Raises:
-            Warning: If the RGB or depth image is missing.
-            Error: If there is an error loading the images.
         """
         gemini_model = ObjectDetector(api_key=os.getenv('GEMINI_API_KEY'), recording_dir=recording_dir)
         object_centers = {}
-
         rgb_image_path = next((f"{recording_dir}/initial_frames/image_0{ext}" for ext in ['.jpg', '.jpeg', '.png'] if os.path.exists(f"{recording_dir}/initial_frames/image_0{ext}")), None)
         depth_image_path = f"{recording_dir}/initial_frames/image_0.npy"
 
@@ -230,7 +226,10 @@ class VideoProcessor4D:
             return {}
 
         try:
-            rgb_image, depth_image = Image.open(rgb_image_path), np.load(depth_image_path)
+            rgb_image = Image.open(rgb_image_path)
+            depth_image = np.load(depth_image_path)
+            # Convert PIL Image to OpenCV format for drawing
+            cv_image = cv2.cvtColor(np.array(rgb_image), cv2.COLOR_RGB2BGR)
         except Exception as e:
             print(f"[Hamer] Error loading images: {e}")
             return {}
@@ -240,11 +239,25 @@ class VideoProcessor4D:
         intrinsics.fx, intrinsics.fy = 611.084594726562, 609.7639770507812
         intrinsics.model, intrinsics.coeffs = rs.distortion.inverse_brown_conrady, [0, 0, 0, 0, 0]
 
+        # Draw centers on image
         for name in classes:
             center_x, center_y, _, _ = gemini_model.get_object_center(rgb_image, name)
+            print(f"[Hamer] {name} Object Center : {center_x}, {center_y}")
             point_3d = deproject_pixel_to_point(depth_image, (center_x, center_y), intrinsics)
+            print(f"[Hamer] {name} 3D Object Center : {point_3d[0]}, {point_3d[1]}, {point_3d[2]}")
             transformed_x, transformed_y, transformed_z = self.apply_coordinate_transformation(*point_3d)
+            print(f"[Hamer] {name} Transformed :", transformed_x, transformed_y, transformed_z)
             object_centers[name] = [transformed_x, transformed_y, transformed_z]
+            
+            # Draw center point and label
+            cv2.circle(cv_image, (int(center_x), int(center_y)), 5, (0, 255, 0), -1)
+            cv2.putText(cv_image, name, (int(center_x)+10, int(center_y)), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+        # Save annotated image
+        output_path = os.path.join(recording_dir, "initial_frames", "detected_centers.jpg")
+        cv2.imwrite(output_path, cv_image)
+        print(f"[Hamer] Saved annotated image to {output_path}")
 
         return object_centers
     
@@ -283,7 +296,7 @@ class VideoProcessor4D:
 
             writer.writerow(row_data)
 
-    def merge_all_processed_csv(self, base_recordings_dir: Path):
+    def merge_all_processed_csv(self, base_recordings_dir: Path, action_name:str):
         """
         Combines multiple CSV files from subdirectories within the base_recordings_dir into a single CSV file.
         This method searches for CSV files named "processed_predictions_hamer.csv" in each subdirectory of the 
@@ -298,14 +311,15 @@ class VideoProcessor4D:
 
         merged_data = pd.DataFrame()
         for folder_name in os.listdir(base_recordings_dir):
-            file_path = os.path.join(base_recordings_dir, folder_name, "processed_predictions_hamer.csv")
-            if os.path.exists(file_path):
-                df = pd.read_csv(file_path)
-                merged_data = pd.concat([merged_data, df], ignore_index=True)
+                file_path = os.path.join(base_recordings_dir, folder_name, action_name,"processed_predictions_hamer.csv")
+                if os.path.exists(file_path):
+                    df = pd.read_csv(file_path)
+                    merged_data = pd.concat([merged_data, df], ignore_index=True)
 
         output_file_path = os.path.join(base_recordings_dir, self.final_csv)
         merged_data.to_csv(output_file_path, index=False)
         print(f"[Hamer] Merged CSV saved to {output_file_path}")
+
 
     def run_complete_processing_pipeline(self, recording_dir: Path, fps: int, classes: list[str], output_csv_path: Path, action: str) -> Path:
         """
@@ -346,7 +360,7 @@ class VideoProcessor4D:
 
         print("[Hamer] Starting merge_all_processed_csv...")
         try:
-            self.merge_all_processed_csv(self.base_recordings_dir)
+            self.merge_all_processed_csv(self.base_recordings_dir, action)
             print(f"[Hamer] merge_all_processed_csv completed successfully \n")
         except Exception as e:
             print(f"[Hamer] Error in merge_all_processed_csv: {e}")

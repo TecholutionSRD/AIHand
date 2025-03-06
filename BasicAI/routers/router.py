@@ -10,7 +10,14 @@ from BasicAI.functions.Inference.inference import realtime_inference
 from BasicAI.functions.dataset.preprocessor import PreProcessor
 from VisionAI.functions.vision_detection import GeminiInference
 from Camera.functions.camera_reciver import CameraReceiver
+from BasicAI.functions.dataset.data_generator import VideoProcessor4D
+from BasicAI.functions.trainer.trainer import train
+from BasicAI.functions.trainer.model import build_model
 from Config.config import load_config
+import requests
+from fastapi import UploadFile, File
+import base64
+import pandas as pd
 #-------------------------------------------------------------------#
 CONFIG_PATH = "basic_ai_config.yaml"
 CAMERA_CONFIG = "camera_config.yaml"
@@ -112,4 +119,45 @@ async def run_inference(target_classes: list[str]):
             raise HTTPException(status_code=500, detail="[AI Router] Trajectory inference failed")
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"[AI Router] Inference pipeline failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"[AI Router] Inference pipeline failed: {str(e)}")@ai_router.post("/process_videos")
+async def process_videos(action_name: str):
+    """
+    Process all videos for a given action
+    Args:
+        action_name (str): Name of the action to process
+    Returns:
+        dict: Processing status
+    """
+    try:
+        video_processor = VideoProcessor4D(CONFIG_PATH)
+        video_processor.process_all_videos(action_name)
+        
+        return {"message": f"[AI Router] Successfully processed videos for action {action_name}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, 
+            detail=f"[AI Router] Video processing failed for action {action_name}: {str(e)}")
+#-------------------------------------------------------------------#
+@ai_router.post("/train")
+def trainer(action_name: str):
+    """
+    Endpoint to train the model for a given action
+    Args:
+        action_name (str): Name of the action to train the model on
+    Returns:
+        dict: Status message of the training process
+    Raises:
+        HTTPException: If training fails
+    """
+    dataset_path = f"data/recordings/{action_name}/dataset.csv"
+    if not os.path.exists(dataset_path):
+        raise HTTPException(status_code=404, detail=f"[AI Router] Dataset not found for action {action_name}")
+
+    try:
+        dataset = pd.read_csv(dataset_path)
+        input_dim = 6
+        output_dim = dataset.shape[1] - input_dim
+        train(CONFIG_PATH, input_dim, output_dim, dataset_path)
+
+        return {"message": f"[AI Router] Model training completed successfully for action {action_name}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"[AI Router] Model training failed for action {action_name}: {str(e)}")

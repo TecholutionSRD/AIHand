@@ -23,6 +23,7 @@ gemini_api_key = os.getenv("GEMINI_API_KEY")
 # Import custom modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from VisionAI.functions.utils import *
+# from utils import *
 
 class GeminiInference:
     """
@@ -51,14 +52,16 @@ class GeminiInference:
         self.default_prompt = (
             "Return bounding boxes for objects in the format:\n"
             "```json\n{'<object_name>': [xmin, ymin, xmax, ymax]}\n```\n"
-            "Include multiple instances as '<object_name>_1', '<object_name>_2', etc."
+            "Include multiple instances of objects as '<object_name>_1', '<object_name>_2', etc."
         )
         self.detection_prompt = (
             "You are a world-class computer vision expert. Analyze this image carefully and detect "
-            "all objects with detailed, specific descriptions. "
-            "Return bounding boxes in JSON format:\n"
+            "all objects with detailed, specific descriptions. For example, use 'red soda can' instead of just 'can'. "
+            "Include color, brand names, or distinctive features when possible. "
+            "Return bounding boxes in the following JSON format:\n"
             "{'<detailed_object_name>': [xmin, ymin, xmax, ymax]}\n"
-            "Use '<detailed_object_name>_1', '<detailed_object_name>_2' for multiple instances."
+            "For multiple instances of similar objects, append numbers like '<detailed_object_name>_1', '<detailed_object_name>_2'.\n"
+            "Focus on accuracy and detail in object descriptions."
         )
         self.capture_state = False
 
@@ -238,3 +241,9 @@ class GeminiInference:
         ymin, xmin, ymax, xmax = box
         return [xmin / 1000 * width, ymin / 1000 * height, xmax / 1000 * width, ymax / 1000 * height]
 
+if __name__ == "__main__":
+    config = load_config("vision_ai_config.yaml")
+    detector = GeminiInference(config)
+    camera = None
+    image_path = "IMG_3838.jpg"
+    image = Image.open(image_path)

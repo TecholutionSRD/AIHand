@@ -4,7 +4,7 @@
 Architecture:
   NeuralNet:
     input_shape: 6
-    output_shape: 64
+    output_shape: 96
     dropout: 0.1
     num_epochs: 100
     batch_size: 8
@@ -19,11 +19,11 @@ Architecture:
 # ==============================
 4D:
   base_recordings_dir: "data/recordings"
-  classes: ["red soda can"]
+  classes: ["red bottle", "slice of toast"]
   url: "http://techolution.ddns.net:5000/process_pose"
   url_orientation: "http://techolution.ddns.net:5001/process_pose"
-  fps: 2
-  num_samples: 16
+  fps: 3
+  num_samples: 24
   final_csv: "merged_predictions_hamer.csv"
   output_path_for_verification: "test/"
   hamer_selected_points: [0, 1, 5, 9, 13, 17]

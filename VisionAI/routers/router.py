@@ -99,8 +99,8 @@ async def detect_object_center(target_class: str):
             raise HTTPException(status_code=404, detail="Object not found")
             
         user_class = response.get("objects", [target_class])[0]
-        
-        result = await gemini.get_object_center(camera, user_class)
+        frames = camera.capture_frame()
+        result = await gemini.get_object_center(frames.get("rgb"), user_class)
         if not result:
             raise HTTPException(status_code=404, detail="Object not found")
         return ObjectCenterResponse(**result)

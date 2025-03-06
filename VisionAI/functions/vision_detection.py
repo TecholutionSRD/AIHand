@@ -110,27 +110,26 @@ class GeminiInference:
         """Enable or disable capture mode."""
         self.capture_state = state
 
-    async def get_object_center(self, camera, target_class: str) -> Optional[Dict]:
+    async def get_object_center(self, color_frame_path: str, target_class: str) -> Optional[Dict]:
         """
         Get the center and bounding box of a detected object.
 
         Args:
-            image (Image.Image): The input image.
+            color_frame_path (str): Path to the RGB image.
             target_class (str): The target class name.
 
         Returns:
             dict: Contains center coordinates, bounding box, and confidence score.
         """
-        frames = await camera.capture_frame()
-        color_frame_path = frames.get("rgb")
-
         image = Image.open(color_frame_path)
         self.process_frame(image)
         results = self.get_process_frame_results()
 
         print(f"[Detect] Processing results: {results}")
 
-        if not results or target_class not in results:
+        # Ensure exact class match
+        if target_class.lower().strip() not in results:
+            print(f"[Detect] No matching object found for {target_class}.")
             return None
 
         box = self.normalize_box(results[target_class])
@@ -141,36 +140,32 @@ class GeminiInference:
         print(f"[Detect] Normalized Box: {box}")
         self.detection_results = detection_results
         print(f"[Detect] Detection Results", self.detection_results)
+        
         return self.detection_results
 
-    async def detect(self, camera, target_class: List[str] = ["red soda can"]):
+    async def detect(self, camera, color_frame_path: str, depth_frame_path: str, target_class: str, intrinsics) -> Tuple[float, float, float]:
         """
-        Processes images to detect objects and calculate real-world coordinates.
+        Processes pre-captured images to detect objects and calculate real-world coordinates.
 
         Args:
             camera: Camera instance.
-            target_class (List[str]): List of target objects to detect.
+            color_frame_path (str): Path to the RGB image.
+            depth_frame_path (str): Path to the depth image.
+            target_class (str): The target object to detect.
+            intrinsics: Camera intrinsics for depth conversion.
 
         Returns:
             Transformed real-world coordinates of the detected object.
         """
-        recording_dir = self.config.get("recording_dir")
-        frames = await camera.capture_frame()
-        color_frame_path = frames.get("rgb")
-        depth_frame_path = frames.get("depth")
-
-        intrinsics = camera._get_intrinsics(location="India", camera_name="D435I")
-
-        self.set_target_classes(target_class)
-        color_image = Image.open(color_frame_path)
-
         print("[Detect] Processing frame for object detection...")
-        output = self.get_object_center(color_image, target_class[0])
-        print(f"[Detect] Detection Output: {output}")
+
+        self.set_target_classes([target_class.lower().strip()])
+
+        output = await self.get_object_center(color_frame_path, target_class)
 
         pixel_center = output.get("center") if output else None
         if not pixel_center:
-            print("[Detect] No object detected.")
+            print(f"[Detect] No object detected for {target_class}.")
             return None
 
         depth_image = np.load(depth_frame_path)
@@ -181,7 +176,7 @@ class GeminiInference:
             return None
 
         transformed_center = transform_coordinates(*depth_center)
-        print(f"[Detect] Transformed Center: {transformed_center}")
+        print(f"[Detect] Transformed Center for {target_class}: {transformed_center}")
 
         return transformed_center
     
@@ -203,7 +198,6 @@ class GeminiInference:
 
         print("[Detect] Processing frame for object detection...")
         output = self.detect_objects(color_image)
-        print(f"[Detect] Detection Output: {output}")
         return output
 
     def detect_objects(self, rgb_frame: Image.Image) -> List[str]:

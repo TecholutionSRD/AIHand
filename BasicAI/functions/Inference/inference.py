@@ -3,14 +3,16 @@ Author: Shreyas Dixit
 This file contains the inference class for the base model.
 """
 from pathlib import Path
+from typing import List
 import joblib
 import torch
 import os
 import sys
 
-# Ensure proper imports from the project structure
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 from BasicAI.functions.trainer.model import TrajectoryModel
+from Camera.functions.camera_reciver import CameraReceiver
+from VisionAI.functions.vision_detection import GeminiInference
 from Config.config import load_config
 
 
@@ -126,15 +128,51 @@ class TrajectoryInference:
         return output_path
 
 
-# if __name__ == '__main__':
-#     print("[Inference] Running script...")
+async def realtime_inference(camera: CameraReceiver, gemini: GeminiInference, target_classes: List[str]):
+    """
+    Main inference pipeline: Captures an image, runs object detection, and predicts trajectory.
 
-#     # Sample test input points
-#     test_points = [[-370.808101, -735.661648, 104.0947533], 
-#                    [-202.9524806, -828.6285971, 41.35059464]]
+    Args:
+        camera: CameraReceiver object for capturing images
+        gemini: GeminiInference object for object detection
+        target_classes: List of target class names to detect
+    """
+    #TODO: Add Infernce model.
+    trajectory_model = None
+    real_world_centers = []
 
-#     # Create inference instance and run prediction
-#     inference_engine = TrajectoryInference()
-#     csv_path = inference_engine.run_inference(test_points)
+    frames = await camera.capture_frame()
+    color_frame_path = frames.get("rgb")
+    depth_frame_path = frames.get("depth")
 
-#     print(f"[Inference] Output saved at {csv_path}")
+    if not color_frame_path or not depth_frame_path:
+        print("[Error] Failed to capture images.")
+        return None
+
+    intrinsics = camera._get_intrinsics(location="India", camera_name="D435I")
+
+    print(f"[Inference] Processing detection for {len(target_classes)} target classes: {target_classes}")
+    for class_name in target_classes:
+        print(f"[Inference] Detecting {class_name}...")
+
+        transformed_center = await gemini.detect(camera, color_frame_path, depth_frame_path, class_name, intrinsics)
+
+        real_world_centers.append(transformed_center)
+
+    if all(center is None for center in real_world_centers):
+        print("[Error] No valid detections found. Cannot proceed with trajectory prediction.")
+        return None
+
+    print("[Inference] Running trajectory prediction...")
+    print("-" * 100)
+    print(f"[Inference] {real_world_centers}")
+    print("-" * 100)
+    try:
+        output_path = trajectory_model.run_inference(real_world_centers)
+        print(f"[Inference] Trajectory prediction saved to: {output_path}")
+    except Exception as e:
+        print(f"[Inference] Error during trajectory prediction: {e}")
+        return None
+
+    print("[Inference] Inference pipeline completed successfully.")
+    return output_path

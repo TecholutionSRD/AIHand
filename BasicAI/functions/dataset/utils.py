@@ -336,12 +336,32 @@ def parse_to_json(response):
     
 
 def transform_coordinates(x, y, z):
-    """Transforms coordinates from input space to cobot base."""
-    B = np.eye(4)
-    B[:3, 3] = [x / 1000, y / 1000, z / 1000]  # Convert to meters
-    A = calib_matrix_y @ B @ np.linalg.inv(calib_matrix_x)
-    transformed_x, transformed_y, transformed_z = A[:3, 3] * 1000  # Convert back to mm
-    return float(transformed_x), float(transformed_y), float(transformed_z)
+    """
+    Transforms coordinates from camera space to the robot's base frame.
+
+    Applies a series of transformations using calibration matrices to convert
+    coordinates from the camera's reference frame to the robot's base frame.
+
+    Args:
+        x (float): X-coordinate in camera space (millimeters).
+        y (float): Y-coordinate in camera space (millimeters).
+        z (float): Z-coordinate in camera space (millimeters).
+
+    Returns:
+        tuple: (transformed_x, transformed_y, transformed_z) in the robot base frame (millimeters).
+    """
+    try:
+        B = np.eye(4)
+        B[:3, 3] = [x / 1000, y / 1000, z / 1000]
+        A = calib_matrix_y @ B @ np.linalg.inv(calib_matrix_x)
+        transformed_x, transformed_y, transformed_z = A[:3, 3] * 1000
+
+        print(f"[VisionAI Utils] Transformed coordinates: ({transformed_x:.2f}, {transformed_y:.2f}, {transformed_z:.2f})")
+        return float(transformed_x), float(transformed_y), float(transformed_z)
+
+    except Exception as e:
+        print(f"[VisionAI Utils] Error in coordinate transformation: {e}")
+        return x, y, z
 
 def parse_list_boxes(text:str):
   result = []

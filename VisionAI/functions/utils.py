@@ -104,8 +104,9 @@ def transform_coordinates(x, y, z):
         config = load_camera_config()
         calib_matrix_x = np.array(config['Transformations']['X'])
         calib_matrix_y = np.array(config['Transformations']['Y'])
-
-        A = calib_matrix_y @ np.eye(4) @ np.linalg.inv(calib_matrix_x)
+        B = np.eye(4)
+        B[:3, 3] = [x / 1000, y / 1000, z / 1000]
+        A = calib_matrix_y @ B @ np.linalg.inv(calib_matrix_x)
         transformed_x, transformed_y, transformed_z = A[:3, 3] * 1000
 
         print(f"[VisionAI Utils] Transformed coordinates: ({transformed_x:.2f}, {transformed_y:.2f}, {transformed_z:.2f})")

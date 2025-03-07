@@ -54,51 +54,72 @@ class Camera:
         self.pipeline.start(self.config)
         print("[Camera] RealSense Camera Started")
 
-    def capture_frame(self):
+    def capture_frame(self, retries: int = 3, timeout: int = 5):
         """
-        Captures a single frame from the RealSense camera and optionally saves it.
-        
-        Args:
-            self.save_path (str, optional): Directory path where frames will be saved.
-        
+        Captures a single frame from the RealSense camera with retries and timeout.
+
         Returns:
-            tuple: (color_image, depth_image) as numpy arrays, or None if no frame is available.
-                  If self.save_path is provided, also returns dict with paths to saved files.
+            tuple: (color_image, depth_image) as numpy arrays.
+                If self.save_path is set, returns a dict with paths to saved files.
         """
-        frames = self.pipeline.wait_for_frames()
-        aligned_frames = self.align.process(frames)
-        color_frame = aligned_frames.get_color_frame()
-        depth_frame = aligned_frames.get_depth_frame()
+        attempt = 0
+        color_image, depth_image = None, None
 
-        if not color_frame:
-            return None, None
+        while attempt < retries:
+            attempt += 1
+            print(f"[Camera] Attempt {attempt}/{retries} to capture frame...")
 
-        color_image = np.asanyarray(color_frame.get_data())
-        depth_image = np.asanyarray(depth_frame.get_data())
+            try:
+                start_time = time.time()
 
-        if self.save_path:
-            id = uuid.uuid4()
-            rgb_dir = f"{self.save_path}/{id}/rgb"
-            depth_dir = f"{self.save_path}/{id}/depth"
-            
-            if not os.path.exists(self.save_path) or not os.path.exists(rgb_dir) or not os.path.exists(depth_dir):
-                os.makedirs(rgb_dir, exist_ok=True)
-                os.makedirs(depth_dir, exist_ok=True)
-                print(f"[Camera] Created directories at {self.save_path}")
+                # Attempt to capture frame with timeout
+                while time.time() - start_time < timeout:
+                    frames = self.pipeline.wait_for_frames()
+                    aligned_frames = self.align.process(frames)
+                    color_frame = aligned_frames.get_color_frame()
+                    depth_frame = aligned_frames.get_depth_frame()
 
-            color_frame_path = f"{rgb_dir}/image_0.jpg"
-            depth_frame_path = f"{depth_dir}/image_0.npy"
-            
-            cv2.imwrite(color_frame_path, color_image)
-            np.save(depth_frame_path, depth_image)
-            
-            print(f"[Camera] Saved frames to {self.save_path}")
-            return color_image, depth_image, {
-                "rgb": color_frame_path,
-                "depth": depth_frame_path
-            }
-        
-        return color_image, depth_image
+                    if color_frame and depth_frame:
+                        color_image = np.asanyarray(color_frame.get_data())
+                        depth_image = np.asanyarray(depth_frame.get_data())
+                        break  # Success, exit loop
+
+                if color_image is None or depth_image is None:
+                    raise ValueError("Captured frame is None.")
+
+                print(f"[Camera] Frame captured successfully on attempt {attempt}")
+
+                # Save the captured frames if save_path is set
+                if self.save_path:
+                    id = uuid.uuid4()
+                    rgb_dir = f"{self.save_path}/{id}/rgb"
+                    depth_dir = f"{self.save_path}/{id}/depth"
+
+                    os.makedirs(rgb_dir, exist_ok=True)
+                    os.makedirs(depth_dir, exist_ok=True)
+
+                    color_frame_path = f"{rgb_dir}/image_0.jpg"
+                    depth_frame_path = f"{depth_dir}/image_0.npy"
+
+                    cv2.imwrite(color_frame_path, color_image)
+                    np.save(depth_frame_path, depth_image)
+
+                    print(f"[Camera] Saved frames: {color_frame_path}, {depth_frame_path}")
+                    return color_image, depth_image, {"rgb": color_frame_path, "depth": depth_frame_path}
+
+                return color_image, depth_image
+
+            except ValueError as ve:
+                print(f"[Camera] Frame error: {ve}")
+            except Exception as e:
+                print(f"[Camera] Unexpected error: {e}")
+
+            if attempt < retries:
+                print("[Camera] Retrying in 0.5 seconds...")
+                time.sleep(0.5)
+
+        print("[Camera] Failed to capture frame after multiple attempts.")
+        return None, None, {"error": "Failed to capture frame after multiple attempts."}
     
     def stop(self):
         """

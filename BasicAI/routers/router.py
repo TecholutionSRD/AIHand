@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from BasicAI.functions.Inference.inference import realtime_inference
 from BasicAI.functions.dataset.preprocessor import PreProcessor
 from VisionAI.functions.vision_detection import GeminiInference
-from Camera.functions.camera_reciver import CameraReceiver
+from Camera.functions.camera_receiver import CameraReceiver
 from BasicAI.functions.dataset.data_generator import VideoProcessor4D
 from BasicAI.functions.trainer.trainer import train
 from BasicAI.functions.trainer.model import build_model

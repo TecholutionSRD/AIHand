@@ -71,17 +71,17 @@ def deproject_pixel_to_point(depth_array, pixel_coords, intrinsics):
     x, y = int(pixel_coords[0]), int(pixel_coords[1])
 
     if x < 0 or x >= depth_array.shape[1] or y < 0 or y >= depth_array.shape[0]:
-        print(f"[VisionAI Utils] Pixel ({x}, {y}) out of bounds.")
+        print(f"[Vision Utils] Pixel ({x}, {y}) out of bounds.")
         return np.array([0, 0, 0])
 
     depth, valid_x, valid_y = get_valid_depth(depth_array, x, y)
 
     if depth == 0:
-        print(f"[VisionAI Utils] No valid depth found near pixel ({x}, {y}).")
+        print(f"[Vision Utils] No valid depth found near pixel ({x}, {y}).")
         return np.array([0, 0, 0])
 
     point_3d = rs.rs2_deproject_pixel_to_point(intrinsics, [valid_x, valid_y], depth)
-    print(f"[VisionAI Utils] Deprojected 3D point: {point_3d}")
+    print(f"[Vision Utils] Deprojected 3D point: {point_3d}")
 
     return np.array(point_3d)
 
@@ -109,9 +109,9 @@ def transform_coordinates(x, y, z):
         A = calib_matrix_y @ B @ np.linalg.inv(calib_matrix_x)
         transformed_x, transformed_y, transformed_z = A[:3, 3] * 1000
 
-        print(f"[VisionAI Utils] Transformed coordinates: ({transformed_x:.2f}, {transformed_y:.2f}, {transformed_z:.2f})")
+        print(f"[Vision Utils] Transformed coordinates: ({transformed_x:.2f}, {transformed_y:.2f}, {transformed_z:.2f})")
         return float(transformed_x), float(transformed_y), float(transformed_z)
 
     except Exception as e:
-        print(f"[VisionAI Utils] Error in coordinate transformation: {e}")
+        print(f"[Vision Utils] Error in coordinate transformation: {e}")
         return x, y, z  # Return original coordinates if the transformation fails

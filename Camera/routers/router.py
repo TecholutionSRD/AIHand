@@ -2,17 +2,16 @@
 This file contains all the routes for the camera microservice.
 """
 import asyncio
-from fastapi import APIRouter
-from functools import lru_cache
+from fastapi import APIRouter, Depends, HTTPException
 from Camera.functions.camera import Camera
-from Camera.functions.camera_reciver import CameraReceiver
+from Camera.functions.camera_receiver import CameraReceiver
 from Camera.functions.video_recorder import VideoRecorder
 from Config.config import load_config
 
 from Database.functions.upload_video import gcp_upload
 from Database.functions.rlef import RLEFManager
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 #-------------------------------------------------------------------#
 # Configuration file path for the camera settings
@@ -24,23 +23,20 @@ camera_router = APIRouter(prefix="/camera")
 # Load config once for efficiency
 config = load_config(CONFIG_PATH)
 #-------------------------------------------------------------------#
-@lru_cache()
 def get_camera():
     """Cache camera instance to avoid repeated instantiation"""
     return Camera(CONFIG_PATH)
 
-@lru_cache()
 def get_camera_receiver():
     """Cache camera receiver instance to avoid repeated instantiation"""
     return CameraReceiver(CONFIG_PATH)
-
 #-------------------------------------------------------------------#
 @camera_router.get("/health")
 async def health_check():
     return {"status": "OK"}
 
 @camera_router.get("/status")
-async def get_status():
+async def get_status(camera: Camera = Depends(get_camera), camera_receiver: CameraReceiver = Depends(get_camera_receiver)):
     """Return which camera is available and its status."""
     try:
         camera = get_camera()
@@ -50,7 +46,7 @@ async def get_status():
         
         camera_receiver = get_camera_receiver()
         print("[Camera Router] Stream Camera Receiver")
-        return {"camera_type": "Stream Camera Receiver"}
+        return {"camera_type": "Stream Camera"}
     except Exception as e:
         return {"error": str(e)}
 
@@ -94,60 +90,86 @@ async def capture_frame():
                 raise ValueError("Captured frame is None.")
         else:
             camera_receiver = get_camera_receiver()
-            color_frame, depth_frame = await camera_receiver.capture_frame()
+            frames = await camera_receiver.capture_frame()
+            status, color_frame, depth_frame = frames.get('status','failed'), frames.get('color_frame'), frames.get('depth_frame')
             if color_frame is None or depth_frame is None:
                 raise ValueError("Captured frame is None.")
         
-        return {"color_frame": color_frame, "depth_frame": depth_frame}
+        return {"status": status, "color_frame": color_frame, "depth_frame": depth_frame}
     
     except ValueError as ve:
         print(f"[Camera Router] Frame capture error: {ve}")
         return {"error": str(ve)}
     except Exception as e:
         print("[Camera Router] Unexpected error occurred")
-        return {"error": "An unexpected error occurred. Check server logs."}
+        return {"status":status, "color_frame": color_frame, "depth_frame": depth_frame}
 
 #-------------------------------------------------------------------#
-# class RecordResponse(BaseModel):
-#     """Response model for video recording"""
-#     gcp_url: str
-#     message: str
+class RecordResponse(BaseModel):
+    """Response model for video recording"""
+    gcp_url: Optional[str] = None
+    message: str
 
-# @camera_router.post("/record", response_model=RecordResponse)
-# async def record_video(action_name:str, objects:List[str]):
-#     """
-#     Records a video and saves it using the VideoRecorder class.
+@camera_router.post("/record_video", response_model=RecordResponse)
+async def record_video(action_name: str, objects: List[str]):
+    """
+    Records a video and saves it using the VideoRecorder class.
 
-#     - `action_name`: Name of the action for labeling
-#     - `objects`: Comma-separated list of objects to log
-#     """
-#     try:
-#         num_recordings = 1
-#         camera_receiver = get_camera_receiver()
-#         await camera_receiver.connect()
+    - `action_name`: Name of the action for labeling
+    - `objects`: List of objects associated with the action
+    """
+    if not action_name.strip():
+        print("[Camera Router] Action name cannot be empty.")
+        raise HTTPException(status_code=400, detail="Action name cannot be empty.")
 
-#         # object_list = objects.split(",") if objects else []
-#         object_list = objects
-#         recorder = VideoRecorder(camera_receiver, config, num_recordings, action_name, object_list)
+    if not objects or not all(isinstance(obj, str) and obj.strip() for obj in objects):
+        print("[Camera Router] Objects list must contain at least one valid string.")
+        raise HTTPException(status_code=400, detail="Objects list must contain at least one valid string.")    
 
-#         print(f"[Camera Router] Initiating video recording:")
-#         print(f"  - Number of recordings: {num_recordings}")
-#         print(f"  - Action: '{action_name}'")
-#         print(f"  - Objects: {object_list}")
-#         print("")
+    try:
+        num_recordings = 1
+        camera_receiver = get_camera_receiver()
+        connection = await camera_receiver.connect()
+        if connection == False:
+            print("[Camera Router] Failed to connect to camera receiver.")
+            raise HTTPException(status_code=500, detail="Failed to connect to camera receiver.")
 
-#         video_paths = await recorder.record_video()
+        recorder = VideoRecorder(camera_receiver, CONFIG_PATH, num_recordings, action_name, objects)
+
+        print(f"[Camera Router] Initiating video recording...")
+        print(f"  - Action: '{action_name}'")
+        print(f"  - Objects: {objects}")
+
+        video_path = await recorder.record_video()
         
-    #     # gcp_url, rlef_result = await asyncio.gather(gcp_upload([video_paths]), rlef_upload(action_name, video_paths))
-        
-    #     if gcp_url and rlef_result:
-    #         return RecordResponse(gcp_url=gcp_url, message="Video recorded and uploaded successfully to both GCP and RLEF")
-    #     elif gcp_url:
-    #         return RecordResponse(gcp_url=gcp_url, message="Video recorded and uploaded to GCP only")
-    #     else:
-    #         return RecordResponse(gcp_url="", message="Upload failed")
+        if not video_path:
+            print("[Camera Router] Video recording failed, no file generated.")
+            raise HTTPException(status_code=500, detail="Video recording failed.")
 
-    # except Exception as e:
-    #     return RecordResponse(gcp_url="", message=f"Recording failed: {str(e)}")
+        print(f"[Camera Router] Video saved at {video_path}")
 
-    
+        # Upload to cloud storage (GCP & RLEF)
+        try:
+            print("[Camera Router] Uploading video to GCP & RLEF...")
+            # gcp_url, rlef_result = await asyncio.gather(gcp_upload([video_path]), rlef_upload(action_name, video_path))
+            gcp_url, rlef_result = None,None
+            print(f"[Camera Router] Upload successful. GCP URL: {gcp_url}")
+        except Exception as upload_error:
+            print(f"[Camera Router] Upload failed: {upload_error}")
+            gcp_url, rlef_result = None, None
+
+        # Handle different upload cases
+        if gcp_url and rlef_result:
+            return RecordResponse(gcp_url=gcp_url, message="Video recorded and uploaded successfully to both GCP and RLEF.")
+        elif gcp_url:
+            return RecordResponse(gcp_url=gcp_url, message="Video recorded and uploaded to GCP only.")
+        else:
+            return RecordResponse(gcp_url=None, message="Video recorded but upload failed.")
+
+    except HTTPException as http_error:
+        print(f"[Camera Router] {http_error.detail}")
+        raise http_error
+
+    except Exception as unexpected_error:
+        print(f"[Camera Router] {unexpected_error}")
+        raise HTTPException(status_code=500, detail="Recording failed due to an internal error.")

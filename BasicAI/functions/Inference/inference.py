@@ -11,7 +11,7 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 from BasicAI.functions.trainer.model import TrajectoryModel
-from Camera.functions.camera_reciver import CameraReceiver
+from Camera.functions.camera_receiver import CameraReceiver
 from VisionAI.functions.vision_detection import GeminiInference
 from Config.config import load_config
 

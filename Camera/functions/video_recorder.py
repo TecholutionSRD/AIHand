@@ -1,4 +1,8 @@
 
+"""
+This file is responsible for recording n second videos and turning on and off the interactive grid.
+"""
+from pathlib import Path
 from typing import List
 import cv2
 import os
@@ -10,20 +14,22 @@ import traceback
 from PIL import Image
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from Camera.functions.camera_reciver import CameraReceiver
+from Config.config import load_config
+from Camera.functions.camera_receiver import CameraReceiver
 
 class VideoRecorder:
     """
-    Class to record an 8-second video at 30 FPS and save frames at 2 FPS,
+    Class to record an `n`-second video at `m` FPS and save frames at `2` FPS,
     while also capturing initial RGB and depth images before each recording.
     """
-    def __init__(self, receiver, config, num_recordings, action_name, objects):
+    def __init__(self, receiver:CameraReceiver, config_path:Path, num_recordings:int=1, action_name:str="pouring", objects:List[str]=["red soda can"]):
         """
         Initializes the VideoRecorder with the provided CameraReceiver instance and additional parameters.
         """
+        config = load_config(config_path)
         self.config = config.get("Video_Recorder", {})
         self.receiver = receiver
-        self.output_dir = self.config['data_path']
+        self.output_dir = self.config.get('data_path',"data/recordings/")
         self.num_recordings = num_recordings
         self.action_name = action_name
         self.objects = objects
@@ -38,14 +44,13 @@ class VideoRecorder:
         """
         Creates a new sample directory structure under the action name.
         """
-        sample_folder = os.path.join(self.output_dir, self.action_name, f"sample_{self.sample_count + 1}")
+        sample_folder = Path(self.output_dir) / self.action_name / f"sample_{self.sample_count + 1}"
+        
+        # Create all required directories in one go
         sub_dirs = ["rgb", "depth", "initial_frames"]
+        [sample_folder.joinpath(sub_dir).mkdir(parents=True, exist_ok=True) for sub_dir in sub_dirs]
 
-        # Create all required directories
-        for sub_dir in ["", *sub_dirs]:  
-            os.makedirs(os.path.join(sample_folder, sub_dir), exist_ok=True)
-
-        return sample_folder
+        return str(sample_folder)
 
     async def capture_initial_frames(self, sample_folder):
         """
@@ -79,25 +84,18 @@ class VideoRecorder:
             with open(os.path.join(sample_folder, "objects.txt"), 'w') as f:
                 for obj in self.objects:
                     f.write(f"{obj}\n")
-
-            await self.capture_initial_frames(sample_folder)
-            
-            # Countdown phase - no recording during this time
-            print("")
-            for i in range(5, 0, -1):
-                print(f"\r[Video Recorder] Countdown: {i} seconds remaining", end="")
             
             _, _ = await self.receiver.decode_frames()
             await asyncio.sleep(1)
 
             print("\n[Video Recorder] Starting recording now!")
 
-            video_path = os.path.join(sample_folder, f"{self.action_name}_video.{self.config['video_format']}")
+            video_path = os.path.join(sample_folder, f"{self.action_name}_video.{self.config.get('video_format', 'mp4')}")
             print(f"[Video Recorder] Video will be saved to: {video_path}")
 
             fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-            frame_size = (self.config['width'], self.config['height'])
-            out = cv2.VideoWriter(video_path, fourcc, self.config['video_fps'], frame_size)
+            frame_size = (self.config.get('width', 640), self.config.get('height',480))
+            out = cv2.VideoWriter(video_path, fourcc, self.config.get('video_fps',10), frame_size)
 
             if not out.isOpened():
                 print("[Video Recorder] ERROR: VideoWriter failed to open")
@@ -105,8 +103,8 @@ class VideoRecorder:
 
             # Recording phase starts here
             start_time = time.time()
-            frame_time = 1.0 / self.config['video_fps']
-            total_frames = int(self.config['video_duration'] * self.config['video_fps'])
+            frame_time = 1.0 / self.config.get('video_fps',10)
+            total_frames = int(self.config.get('video_duration',8) * self.config.get('video_fps',10))
 
             print(f"[Video Recorder] Recording {total_frames} frames")
             print("")

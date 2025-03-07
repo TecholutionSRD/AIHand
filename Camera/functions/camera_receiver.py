@@ -174,57 +174,66 @@ class CameraReceiver:
         await self.cleanup()
         return {"message": "Display stopped asynchronously."}
 
-    async def capture_frame(self):
+    async def capture_frame(self, retries: int = 3, timeout: int = 5):
         """
-        Connects to the WebSocket server, receives one frame, and saves it to the specified location.
-        
+        Captures a single frame from the WebSocket stream with retries and timeout.
+
         Returns:
-            dict: A dictionary containing paths to the 'rgb' and 'depth' directories.
+            dict: A dictionary containing paths to the 'rgb' and 'depth' frame files.
         """
-        connection_success = await self.connect()
-        
-        if not connection_success:
-            return {"error": "Failed to connect to WebSocket server."}
+        attempt = 0
         id = uuid.uuid4()
         rgb_dir = f"{self.save_path}/{id}/rgb"
         depth_dir = f"{self.save_path}/{id}/depth"
-        
-        os.makedirs(self.save_path, exist_ok=True)
+
         os.makedirs(rgb_dir, exist_ok=True)
         os.makedirs(depth_dir, exist_ok=True)
-        print(f"[Camera] Using directories at {self.save_path}")
 
-        color_frame_path = None
-        depth_frame_path = None
+        while attempt < retries:
+            attempt += 1
+            print(f"[Camera] Attempt {attempt}/{retries} to capture frame...")
 
-        if self.websocket:
-            self.running = True
-            async for color_frame, depth_frame in self.frames():
-                if color_frame is None or depth_frame is None:
-                    await self.cleanup()
-                    return {"error": "Failed to capture frames: Color or Depth frame is None"}
+            try:
+                connection_success = await asyncio.wait_for(self.connect(), timeout=timeout)
+                if not connection_success:
+                    raise ConnectionError("Failed to connect to WebSocket server.")
 
-                try:
+                if not self.websocket:
+                    raise RuntimeError("WebSocket connection is not established.")
+
+                # Process frame
+                async for color_frame, depth_frame in self.frames():
+                    if color_frame is None or depth_frame is None:
+                        raise ValueError("Captured frame is None.")
+
+                    # Save frames
                     color_frame_path = f"{rgb_dir}/image_0.jpg"
-                    cv2.imwrite(color_frame_path, color_frame)
-                    print(f"[Camera] Saved color frame to {color_frame_path}")
-
                     depth_frame_path = f"{depth_dir}/image_0.npy"
-                    np.save(depth_frame_path, depth_frame)
-                    print(f"[Camera] Saved depth frame to {depth_frame_path}")
 
+                    cv2.imwrite(color_frame_path, color_frame)
+                    np.save(depth_frame_path, depth_frame)
+
+                    print(f"[Camera] Saved frames: {color_frame_path}, {depth_frame_path}")
+                    
                     self.running = False
-                    break
-                except Exception as e:
                     await self.cleanup()
-                    return {"error": f"Failed to save frames: {str(e)}"}
+                    
+                    status = "success"
+
+                    return {"status": status ,"color_frame": color_frame_path, "depth": depth_frame_path}
+
+            except (asyncio.TimeoutError, ConnectionError) as e:
+                print(f"[Camera] Connection error: {e}")
+            except ValueError as ve:
+                print(f"[Camera] Frame error: {ve}")
+            except Exception as e:
+                print(f"[Camera] Unexpected error: {e}")
+            
+            await asyncio.sleep(attempt)
 
         await self.cleanup()
-
-        return {
-            "rgb": color_frame_path,
-            "depth": depth_frame_path
-        }
+        status = "failed"
+        return {"status": status ,"color_frame": "None", "depth_frame": "None"}
 
     async def start_display(self):
         """

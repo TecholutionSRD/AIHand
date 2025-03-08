@@ -24,7 +24,6 @@ CAMERA_CONFIG = "camera_config.yaml"
 VISION_CONFIG = "vision_ai_config.yaml"
 ai_router = APIRouter(prefix="/AI")
 config = load_config(CONFIG_PATH)
-vision_config = load_config(VISION_CONFIG)
 #-------------------------------------------------------------------#
 @lru_cache()
 def get_processor():
@@ -34,7 +33,7 @@ def get_processor():
 @lru_cache()
 def get_gemini():
     """Cache Gemini Model instance to avoid repeated loading."""
-    return GeminiInference(vision_config)
+    return GeminiInference(VISION_CONFIG)
 
 @lru_cache()
 def get_camera_receiver():
@@ -43,13 +42,23 @@ def get_camera_receiver():
 #-------------------------------------------------------------------#
 @ai_router.get("/health")
 async def health_check():
-    return {"status": "OK"}
-
+    """
+    Health check endpoint to verify if all required components are loaded properly.
+    Returns:
+        dict: Status of the health check
+    """
+    try:
+        processor = get_processor()
+        gemini = get_gemini()
+        camera_receiver = get_camera_receiver()
+        return {"status": "OK"}
+    except Exception as e:
+        return {"status": "ERROR", "detail": str(e)}
 #--------------------------------------------------------------------#
 @ai_router.post("/Hamer")
 async def process_hamer(action_name: str, objects: list[str]):
     """
-    Process Hamer with given objects and action name
+    ;o
     Args:
         action_name (str): Name of the action
         objects (list[str]): List of objects to process 

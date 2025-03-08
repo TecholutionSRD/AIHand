@@ -25,7 +25,6 @@ def get_gemini():
 def get_camera_receiver():
     """Cache CameraReceiver instance to avoid repeated instantiation."""
     return CameraReceiver(CONFIG_PATH)
-
 #-------------------------------------------------------------------#
 # Health Check Endpoint
 @visionai_router.get("/health")
@@ -100,7 +99,7 @@ async def detect():
     except Exception as e:
         print(f"[Vision Router] Detection failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Detection failed: {str(e)}")
-    
+#-------------------------------------------------------------------------------------------------#
 # Object Center Detection
 class ObjectCenterResponse(BaseModel):
     """
@@ -128,11 +127,10 @@ async def detect_object_centers(target_classes: List[str]):
     try:
         print("[Vision Router] Starting multiple object center detection")
 
-        # # Initialize camera and model
         camera = get_camera_receiver()
         gemini = get_gemini()
         intrinsics = camera._get_intrinsics()
-        # # Capture frames once and use for all detections
+
         # frames = await camera.capture_frame()
         # if not frames or frames.get("status") != "success":
         #     print("[Vision Router] Failed to capture frames from camera")
@@ -143,7 +141,6 @@ async def detect_object_centers(target_classes: List[str]):
 
         color_frame_path = "C:/Users/ASUS/Desktop/Techolution/AIHand/data/captured_frames/1ede1de0-cb15-4460-b55b-69cf138e7e07/rgb/image_0.jpg"
         depth_frame_path = "C:/Users/ASUS/Desktop/Techolution/AIHand/data/captured_frames/1ede1de0-cb15-4460-b55b-69cf138e7e07/depth/image_0.npy"
-
         color_frame = Image.open(color_frame_path)
         depth_frame = np.load(depth_frame_path)
         
@@ -186,90 +183,4 @@ async def detect_object_centers(target_classes: List[str]):
     except Exception as e:
         print(f"[Vision Router] Error in detect_object_centers: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
-#-------------------------------------------------------------------#
-# # Set Target Classes Request Model
-# class TargetClassesRequest(BaseModel):
-#     """
-#     Request model for setting target detection classes.
-    
-#     Attributes:
-#         target_classes (List[str]): List of target object classes.
-#     """
-#     target_classes: List[str]
 
-# @visionai_router.post("/set_target_classes")
-# async def set_target_classes(request: TargetClassesRequest):
-#     """
-#     Update the target classes for object detection.
-    
-#     Args:
-#         request (TargetClassesRequest): Target classes list.
-    
-#     Returns:
-#         dict: Confirmation message.
-#     """
-#     try:
-#         gemini = get_gemini()
-#         gemini.set_target_classes(request.target_classes)
-#         return {"message": "Target classes updated successfully"}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-#-------------------------------------------------------------------#
-# Set Inference State
-# class InferenceStateRequest(BaseModel):
-#     """
-#     Request model for setting inference mode.
-    
-#     Attributes:
-#         state (bool): New inference mode state.
-#     """
-#     state: bool
-
-
-# @visionai_router.post("/set_inference_state")
-# async def set_inference_state(request: InferenceStateRequest):
-#     """
-#     Enable or disable inference mode.
-    
-#     Args:
-#         request (InferenceStateRequest): New inference state.
-    
-#     Returns:
-#         dict: Confirmation message.
-#     """
-#     try:
-#         gemini = get_gemini()
-#         gemini.set_inference_state(request.state)
-#         return {"message": "Inference state updated successfully"}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-#-------------------------------------------------------------------#
-# Set Capture State
-# class CaptureStateRequest(BaseModel):
-#     """
-#     Request model for setting capture mode.
-    
-#     Attributes:
-#         state (bool): New capture mode state.
-#     """
-#     state: bool
-
-# @visionai_router.post("/set_capture_state")
-# async def set_capture_state(request: CaptureStateRequest):
-#     """
-#     Enable or disable capture mode.
-    
-#     Args:
-#         request (CaptureStateRequest): New capture state.
-    
-#     Returns:
-#         dict: Confirmation message.
-#     """
-#     try:
-#         gemini = get_gemini()
-#         gemini.set_capture_state(request.state)
-#         return {"message": "Capture state updated successfully"}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))

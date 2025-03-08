@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir)))
-from Database.functions.db import check_knowledgebase, get_action_objects
+from Database_old.functions.db import check_knowledgebase, get_action_objects
 from Config.config import load_config
 
 load_dotenv()

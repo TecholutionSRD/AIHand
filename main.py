@@ -8,6 +8,8 @@ from fastapi import FastAPI, Response
 from Camera.routers.router import camera_router
 from VisionAI.routers.router import visionai_router
 from Database.routers.router import db_router
+from Database.routers.grasp_routes import grasp_router
+from Database.routers.action_routes import action_router
 from BasicAI.routers.router import ai_router
 # ---------------------------------------#
 app = FastAPI(title="AI Hand", description="AI Hand Microservices", version="0.1.0", docs_url="/docs", redoc_url="/rdocs")
@@ -19,6 +21,8 @@ app.include_router(camera_router, tags=["Camera"])
 app.include_router(visionai_router, tags=["Vision"])
 app.include_router(ai_router, tags=["AI"])
 app.include_router(db_router, tags=["DataBase"])
+app.include_router(action_router, tags=["Action DB"])
+app.include_router(grasp_router, tags=["Grasp DB"])
 # ---------------------------------------#
 
 if __name__ == "__main__":

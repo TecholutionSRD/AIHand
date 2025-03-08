@@ -8,8 +8,8 @@ from Camera.functions.camera_receiver import CameraReceiver
 from Camera.functions.video_recorder import VideoRecorder
 from Config.config import load_config
 
-from Database.functions.upload_video import gcp_upload
-from Database.functions.rlef import RLEFManager
+from Database_old.functions.upload_video import gcp_upload
+from Database_old.functions.rlef import RLEFManager
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -103,7 +103,6 @@ async def capture_frame():
     except Exception as e:
         print("[Camera Router] Unexpected error occurred")
         return {"status":status, "color_frame": color_frame, "depth_frame": depth_frame}
-
 #-------------------------------------------------------------------#
 class RecordResponse(BaseModel):
     """Response model for video recording"""

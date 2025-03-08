@@ -39,11 +39,26 @@ Camera:
           distortion_model: "rs.distortion.brown_conrady"
           coeff: [0.0, 0.0, 0.0, 0.0, 0.0]
 
+# DataBase:
+#   base_dir: "Database/"
+#   grasp: "grasps.csv"
+#   action: "actions.csv"
+#   action_objects: "action_objects.csv"
+
 DataBase:
-  base_dir: "Database/"
-  grasp: "grasps.csv"
-  action: "actions.csv"
-  action_objects: "action_objects.csv"
+  URL: 'mongodb://localhost:27017/'
+  database_name: 'AIHand'
+  collections:
+    actions_db:
+      action_name: "string"
+      model_available: "bool"
+      num_samples: "int"
+      tool: "string"
+      onjects: "string"
+    grasp_db:
+      object_name: "string"
+      grasp_distance: "float"
+      pickup_mode: "string"
 
 RLEF:
   base_url: "https://autoai-backend-exjsxe2nda-uc.a.run.app/model"

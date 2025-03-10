@@ -8,8 +8,7 @@ from Camera.functions.camera_receiver import CameraReceiver
 from Camera.functions.video_recorder import VideoRecorder
 from Config.config import load_config
 
-from Database_old.functions.upload_video import gcp_upload
-from Database_old.functions.rlef import RLEFManager
+
 from pydantic import BaseModel
 from typing import List, Optional
 

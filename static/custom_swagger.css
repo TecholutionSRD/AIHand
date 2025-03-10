@@ -1,0 +1,442 @@
+/* Custom Swagger UI Styling */
+:root {
+    --primary-color: #3b82f6;
+    --secondary-color: #1d4ed8;
+    --background-color: #f8fafc;
+    --text-color: #0f172a;
+    --border-color: #e2e8f0;
+    --hover-color: #dbeafe;
+    --purple-light: #f3ebff;
+    --purple-border: #9664c8;
+    
+    /* HTTP Method Colors */
+    --get-color: #61affe;
+    --post-color: #49cc90;
+    --put-color: #fca130;
+    --delete-color: #f93e3e;
+    --patch-color: #50e3c2;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+/* Reduce the overall width of the content */
+.swagger-ui .wrapper {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.swagger-ui .topbar {
+    background-color: var(--primary-color);
+    padding: 15px 0;
+    border-radius: 0 0 12px 12px;
+}
+
+/* Center the title and description */
+.swagger-ui .info {
+    margin: 25px 0;
+    text-align: center;
+}
+
+.swagger-ui .info .title {
+    font-size: 36px;
+    font-weight: 600;
+    color: black;
+    margin-bottom: 15px;
+}
+
+/* Remove /openapi.json from title */
+.swagger-ui .info .title:after {
+    content: "";
+    display: none;
+    
+}
+
+.swagger-ui .info .main span {
+    display: none;
+}
+
+.swagger-ui .models{
+    display: none;
+}
+
+.swagger-ui .info p{
+    font-size: larger;
+}
+
+.swagger-ui .info .markdown {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Make tag sections more compact and contain all operations */
+.swagger-ui .opblock-tag-section {
+    margin-bottom: 25px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Style the tag header (purple div) */
+.swagger-ui .opblock-tag {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 20px auto 0;
+    padding: 12px 20px;
+    width: 85%;
+    text-align: justify;
+    border-radius: 12px 12px 0 0;
+    cursor: pointer;
+    background-color: var(--purple-light);
+}
+
+/* Container for operations within a tag */
+.swagger-ui .opblock-tag-section .no-margin {
+    border-radius: 0 0 12px 12px;
+    margin: 0 auto;
+    width: 85%;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2%;
+}
+
+/* Reduce width of operation blocks and increase border radius */
+.swagger-ui .opblock {
+    margin: 0 auto 15px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    width: 100%;
+}
+
+.swagger-ui .opblock .no-margin{
+    margin: auto;
+    width: auto;
+}
+
+/* Make operation summary more compact */
+.swagger-ui .opblock .opblock-summary {
+    padding: 8px 12px;
+}
+
+.swagger-ui .opblock .opblock-summary-method {
+    border-radius: 8px;
+    font-weight: 600;
+    min-width: 80px;
+    text-align: center;
+}
+
+/* Remove /openapi.json from paths */
+.swagger-ui .opblock-summary-path a span:last-child {
+    display: none;
+}
+
+/* Enhance color for GET operations */
+.swagger-ui .opblock.opblock-get {
+    background-color: rgba(97, 175, 254, 0.1);
+    border-color: rgba(97, 175, 254, 0.4);
+}
+
+.swagger-ui .opblock.opblock-get .opblock-summary-method {
+    background-color: var(--get-color);
+}
+
+.swagger-ui .opblock.opblock-get:hover {
+    background-color: rgba(97, 175, 254, 0.15);
+}
+
+/* Enhance color for POST operations */
+.swagger-ui .opblock.opblock-post {
+    background-color: rgba(73, 204, 144, 0.1);
+    border-color: rgba(73, 204, 144, 0.4);
+}
+
+.swagger-ui .opblock.opblock-post .opblock-summary-method {
+    background-color: var(--post-color);
+}
+
+.swagger-ui .opblock.opblock-post:hover {
+    background-color: rgba(73, 204, 144, 0.15);
+}
+
+/* Enhance color for PUT operations */
+.swagger-ui .opblock.opblock-put {
+    background-color: rgba(252, 161, 48, 0.1);
+    border-color: rgba(252, 161, 48, 0.4);
+}
+
+.swagger-ui .opblock.opblock-put .opblock-summary-method {
+    background-color: var(--put-color);
+}
+
+.swagger-ui .opblock.opblock-put:hover {
+    background-color: rgba(252, 161, 48, 0.15);
+}
+
+/* Enhance color for DELETE operations */
+.swagger-ui .opblock.opblock-delete {
+    background-color: rgba(249, 62, 62, 0.1);
+    border-color: rgba(249, 62, 62, 0.4);
+}
+
+.swagger-ui .opblock.opblock-delete .opblock-summary-method {
+    background-color: var(--delete-color);
+}
+
+.swagger-ui .opblock.opblock-delete:hover {
+    background-color: rgba(249, 62, 62, 0.15);
+}
+
+/* Enhance color for PATCH operations */
+.swagger-ui .opblock.opblock-patch {
+    background-color: rgba(80, 227, 194, 0.1);
+    border-color: rgba(80, 227, 194, 0.4);
+}
+
+.swagger-ui .opblock.opblock-patch .opblock-summary-method {
+    background-color: var(--patch-color);
+}
+
+.swagger-ui .opblock.opblock-patch:hover {
+    background-color: rgba(80, 227, 194, 0.15);
+}
+
+/* Make the endpoint path text more compact */
+.swagger-ui .opblock-summary-path {
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 650px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Make endpoint descriptions more compact */
+.swagger-ui .opblock-description-wrapper p, 
+.swagger-ui .opblock-external-docs-wrapper p, 
+.swagger-ui .opblock-title_normal p {
+    line-height: 1.6;
+    font-size: 13px;
+}
+
+/* Make table cells more compact */
+.swagger-ui table tbody tr td {
+    padding: 10px 8px;
+    font-size: 13px;
+}
+
+/* Style buttons with more rounded corners */
+.swagger-ui .btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.swagger-ui .btn.execute {
+    background-color: var(--primary-color);
+}
+
+.swagger-ui .btn.execute:hover {
+    background-color: var(--secondary-color);
+}
+
+/* Override all tag section styles to use elegant and subtle colors */
+.swagger-ui .opblock-tag[data-tag="DataBase"] {
+    background-color: #d1e7dd; 
+}
+
+.swagger-ui .opblock-tag[data-tag="AI"] {
+    background-color: #ffe9cc;
+}
+
+.swagger-ui .opblock-tag[data-tag="Action DB"] {
+    background-color: #e0d6ff; 
+}
+
+.swagger-ui .opblock-tag[data-tag="Grasp DB"] {
+    background-color: #f8d7da;
+}
+
+.swagger-ui .opblock-tag[data-tag="Vision"] {
+    background-color: #fff3cd;
+}
+
+.swagger-ui .opblock-tag[data-tag="Camera"]{
+    background-color: #cfe2ff;
+}
+
+.swagger-ui .opblock-tag[data-tag="Camera"] a,
+.swagger-ui .opblock-tag[data-tag="Camera"] p{
+    color: #004085;
+}
+
+.swagger-ui .opblock-tag[data-tag="AI"] a,
+.swagger-ui .opblock-tag[data-tag="AI"] p{
+    color: #834b02;
+}
+
+.swagger-ui .opblock-tag[data-tag="Action DB"] a,
+.swagger-ui .opblock-tag[data-tag="Action DB"] p{
+    color: #260291;
+}
+
+.swagger-ui .opblock-tag[data-tag="Grasp DB"] a,
+.swagger-ui .opblock-tag[data-tag="Grasp DB"] p{
+    color: #86010c;
+}
+
+.swagger-ui .opblock-tag[data-tag="Vision"] a,
+.swagger-ui .opblock-tag[data-tag="Vision"] p{
+    color: #906f03;
+}
+
+.swagger-ui .opblock-tag[data-tag="DataBase"] a,
+.swagger-ui .opblock-tag[data-tag="DataBase"] p{
+    color: #02874b;
+}
+
+.swagger-ui .opblock-section-header{
+    border-radius: 8px;
+}
+
+/* Override all container backgrounds to use purple */
+.swagger-ui .opblock-tag-section[data-tag] .no-margin {
+    background-color: var(--purple-light);
+    border-left: 1px solid var(--purple-border);
+    border-right: 1px solid var(--purple-border);
+    border-bottom: 1px solid var(--purple-border);
+}
+
+/* Make description text more readable */
+.swagger-ui .markdown p {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Better input fields with more rounded corners */
+.swagger-ui input[type=text], 
+.swagger-ui textarea {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+.swagger-ui input[type=text]:focus, 
+.swagger-ui textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+
+}
+
+/* Enhance response section */
+.swagger-ui .responses-table .response-col_status {
+    font-weight: 600;
+}
+
+/* Make parameter table more compact */
+.swagger-ui .parameters-container .parameters {
+    max-width: 95%;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* More compact parameter rows */
+.swagger-ui .parameters-container .parameter__name {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.swagger-ui .parameters-container .parameter__type {
+    font-size: 12px;
+}
+
+/* Schema styling with more rounded corners */
+.swagger-ui .model-box {
+    background-color: white;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    max-width: 95%;
+}
+
+/* More compact models */
+.swagger-ui section.models {
+    width: 85%;
+    margin: 0 auto;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.swagger-ui section.models .model-container {
+    border-radius: 10px;
+    margin: 0 0 15px 0;
+}
+
+/* Center the models title */
+.swagger-ui section.models h4 {
+    text-align: center;
+    font-size: 22px;
+    margin-bottom: 15px;
+}
+
+/* Reduce the width of expanded operation content */
+.swagger-ui .opblock-body {
+    max-width: 100%;
+    border-radius: 0 0 12px 12px;
+}
+
+/* Make Try it out button more visible with rounded corners */
+.swagger-ui .try-out__btn {
+    background-color: var(--primary-color);
+    color: white;
+    font-size:medium;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: None;
+}
+
+.swagger-ui .try-out__btn:hover {
+    background-color: var(--secondary-color);
+}
+
+
+
+/* Improve the layout on smaller screens */
+@media (max-width: 768px) {
+    .swagger-ui .opblock-tag,
+    .swagger-ui .opblock-tag-section .no-margin,
+    .swagger-ui .opblock {
+        width: 100%;
+    }
+}
+
+/* Center authorize button */
+.swagger-ui .auth-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 15px 0;
+}
+
+.swagger-ui .auth-container {
+    border-radius: 10px;
+}
+
+/* Center scheme selection */
+.swagger-ui .scheme-container {
+    margin: 0 auto 15px;
+    padding: 15px 0;
+    background: rgba(59, 130, 246, 0.05);
+    border-radius: 10px;
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+}
+
+.swagger-ui .scheme-container .schemes {
+    display: flex;
+    justify-content: center;
+}

@@ -1,21 +1,59 @@
-# """
-# This codes takes in a CSV and augments the data by applying transformations and offsets to each row in the CSV.
-# """
 # import pandas as pd
+# import numpy as np
+# import matplotlib.pyplot as plt
 
 # class DataAugmenter:
-#     def __init__(self, input_csv, output_csv, transformations=None, offsets=None):
+#     """
+#     A class for augmenting and manipulating trajectory data stored in CSV files.
+#     This class provides functionality to augment trajectory data through various transformations,
+#     including translations, flips, and combinations of both. It's designed to work with CSV files
+#     containing coordinate data with '_x' and '_y' suffixes for position columns.
+#     Attributes:
+#         input_csv (str): Path to the input CSV file containing original trajectory data.
+#         output_csv (str): Path where the augmented data will be saved (optional).
+#         transformations (list): List of tuples containing (dx, dy) transformation pairs.
+#         offsets (list): List of scaling factors applied to transformations.
+#         df (pandas.DataFrame): Original data loaded from input CSV.
+#         augmented_df (pandas.DataFrame): Data after applying transformations.
+#         df_flipped (pandas.DataFrame): Flipped version of the augmented data.
+#         df_combined (pandas.DataFrame): Combined original and flipped data.
+#     Methods:
+#         augment_normal(): Applies translations to create augmented dataset.
+#         flip_data(): Creates a mirrored version of the augmented data.
+#         combine_data(): Merges original augmented and flipped datasets.
+#         save_to_csv(file_path=None): Saves the processed data to a CSV file.
+#         plot_trajectories(output_file=None, sample_size=1000): Visualizes the trajectories.
+#     Example:
+#         >>> augmenter = DataAugmenter('input.csv', 'output.csv')
+#         >>> augmented_data = augmenter.augment_normal()
+#         >>> flipped_data = augmenter.flip_data()
+#         >>> combined_data = augmenter.combine_data()
+#         >>> augmenter.save_to_csv()
+#     Raises:
+#         FileNotFoundError: If the input CSV file doesn't exist.
+#         ValueError: If the input CSV is empty or if attempting to save/plot without processing data first.
+#     """
+
+#     def __init__(self, input_csv, output_csv=None, transformations=None, offsets=None):
+#         """
+#         Initialize the DataAugmenter with input and output CSV paths, transformations, and offsets.
+        
+#         :param input_csv: Path to the input CSV file
+#         :param output_csv: Path to save the augmented CSV file (optional)
+#         :param transformations: List of transformation tuples (default is predefined set)
+#         :param offsets: List of offset values (default is [15, 5])
+#         """
 #         self.input_csv = input_csv
 #         self.output_csv = output_csv
+
 #         self.transformations = transformations if transformations else [
-#             (0, 0), 
-#             (1, 1), (1, -1), (-1, 1), (-1, -1),
+#             (0, 0), (1, 1), (1, -1), (-1, 1), (-1, -1),
 #             (2, 0), (-2, 0), (0, 2), (0, -2),
 #             (2, 2), (2, -2), (-2, 2), (-2, -2),
 #             (3, 1), (3, -1), (-3, 1), (-3, -1),
 #             (1, 3), (1, -3), (-1, 3), (-1, -3),
-#             (3, 3), (3, -3), (-3, 3), (-3, -3),
-#             (3,-5), (-3,-5),(3,5),(-3,5),(-5,3),(-5,-3),(5,3),(5,-3),
+#             (3, 3), (3, -3), (-3, 3), (-3, -3), 
+#             (3,-5), (-3,-5), (3,5), (-3,5), (-5,3), (-5,-3), (5,3), (5,-3),
 #             (4, 0), (-4, 0), (0, 4), (0, -4),
 #             (4, 2), (4, -2), (-4, 2), (-4, -2),
 #             (2, 4), (2, -4), (-2, 4), (-2, -4),
@@ -23,63 +61,117 @@
 #             (5, 1), (5, -1), (-5, 1), (-5, -1),
 #             (1, 5), (1, -5), (-1, 5), (-1, -5)
 #         ]
-#         self.offsets = offsets if offsets else [17]
-#         self.df = pd.read_csv(self.input_csv)
+
+#         self.offsets = offsets if offsets else [15, 5]
+
+#         try:
+#             self.df = pd.read_csv(self.input_csv)
+#             if self.df.empty:
+#                 raise ValueError(f"Input file {self.input_csv} is empty.")
+#         except FileNotFoundError:
+#             raise FileNotFoundError(f"Input file {self.input_csv} not found.")
+#         except pd.errors.EmptyDataError:
+#             raise ValueError(f"Input file {self.input_csv} is empty.")
+
 #         self.augmented_df = pd.DataFrame()
+#         self.df_flipped = None
+#         self.df_combined = None
 
-#     def augment_data(self):
+#     def augment_normal(self):
 #         """
-#         Augments the data by applying transformations and offsets to each row in the CSV.
+#         Augments the data by applying transformations and offsets in a vectorized manner.
 #         """
-#         for index, row in self.df.iterrows():
-#             self.augmented_df = pd.concat([self.augmented_df, row.to_frame().T], ignore_index=True)
-#             for dx, dy in self.transformations:
-#                 for offset in self.offsets:
-#                     new_row = row.copy()
-#                     for col in self.df.columns:
-#                         if '_x' in col:
-#                             new_row[col] += (dx * offset) 
-#                         if '_y' in col:
-#                             new_row[col] += (dy * offset)
-#                     self.augmented_df = pd.concat([self.augmented_df, new_row.to_frame().T], ignore_index=True)
-
-#     def save_to_csv(self):
-#         """
-#         Saves the augmented data to a CSV.
-#         """
-#         self.augmented_df.to_csv(self.output_csv, index=False)
-    
-#     def get_augmented_data_samples(self):
-#         """
-#         Returns the number of rows in the augmented DataFrame.
-#         """
-#         return len(self.augmented_df)
-
-#     def get_augmented_object_locations(self):
-#         """
-#         """
-#         object_1_locations = []
-#         object_2_locations = []
+#         df_expanded = self.df.copy()
+#         for dx, dy in self.transformations:
+#             for offset in self.offsets:
+#                 df_transformed = self.df.copy()
+#                 df_transformed.filter(like='_x') += dx * offset
+#                 df_transformed.filter(like='_y') += dy * offset
+#                 df_expanded = pd.concat([df_expanded, df_transformed], ignore_index=True)
         
-#         for index, row in self.augmented_df.iterrows():
-#             object_1_locations.append([row[0], row[1], row[2]])
-#             object_2_locations.append([row[3], row[4], row[5]])
-        
-#         return object_1_locations, object_2_locations
+#         self.augmented_df = df_expanded
+#         return self.augmented_df
 
-#     def extract_nth_samples(self, n, new_output_csv):
+#     def flip_data(self):
 #         """
-#         Extracts every nth sample from the augmented data and saves it to a new CSV.
+#         Flips the augmented data along the y-axis using vectorized operations.
 #         """
-#         total_samples = len(self.augmented_df)
-#         step = max(1, total_samples // n)
-#         sampled_df = self.augmented_df.iloc[::step]
-#         sampled_df.to_csv(new_output_csv, index=False)
-#         return new_output_csv
-# # Usage Example:
-# # augmenter = DataAugmenter(input_csv='input.csv', output_csv='augmented_output.csv')
-# # augmenter.augment_data()
-# # augmenter.save_to_csv()
+#         if self.augmented_df.empty:
+#             self.augment_normal()
+
+#         x_columns = [col for col in self.augmented_df.columns if '_x' in col]
+#         center_x = self.augmented_df[x_columns].mean()
+
+#         self.df_flipped = self.augmented_df.copy()
+#         self.df_flipped[x_columns] = 2 * center_x - self.df_flipped[x_columns]
+
+#         c_columns = [col for col in self.augmented_df.columns if col.endswith('_c')]
+#         self.df_flipped[c_columns] = -self.df_flipped[c_columns]
+
+#         return self.df_flipped
+
+#     def combine_data(self):
+#         """
+#         Combines the original augmented data with the flipped data.
+#         """
+#         if self.df_flipped is None:
+#             self.flip_data()
+        
+#         self.df_combined = pd.concat([self.augmented_df, self.df_flipped], ignore_index=True)
+#         return self.df_combined
+
+#     def save_to_csv(self, file_path=None):
+#         """
+#         Saves the augmented or combined data to a CSV file.
+        
+#         :param file_path: Path to save the CSV (uses self.output_csv if not provided)
+#         """
+#         if self.df_combined is not None:
+#             save_df = self.df_combined
+#         elif self.augmented_df is not None and not self.augmented_df.empty:
+#             save_df = self.augmented_df
+#         else:
+#             raise ValueError("No data to save. Run augment_data() first.")
+
+#         save_path = file_path or self.output_csv
+#         if save_path is None:
+#             raise ValueError("No output file path specified")
+
+#         save_df.to_csv(save_path, index=False)
+#         print(f"Data saved to: {save_path}")
+#         return save_path
+
+#     def plot_trajectories(self, output_file=None, sample_size=1000):
+#         """
+#         Plot the original and flipped trajectories.
+        
+#         :param output_file: Optional path to save the plot
+#         """
+#         if self.augmented_df is None or self.df_flipped is None:
+#             raise ValueError("Run augment_data() and flip_data() before plotting")
+
+#         x_columns = [col for col in self.augmented_df.columns if '_x' in col]
+#         y_columns = [col for col in self.augmented_df.columns if '_y' in col]
+
+#         plt.figure(figsize=(12, 8))
+
+#         sampled_df = self.augmented_df.sample(min(sample_size, len(self.augmented_df)))
+#         sampled_flipped = self.df_flipped.sample(min(sample_size, len(self.df_flipped)))
+
+#         for x_col, y_col in zip(x_columns, y_columns):
+#             plt.scatter(sampled_df[x_col], sampled_df[y_col], label=f"Original {x_col.replace('_x', '')}", alpha=0.7)
+#             plt.scatter(sampled_flipped[x_col], sampled_flipped[y_col], label=f"Flipped {x_col.replace('_x', '')}", alpha=0.5)
+
+#         plt.xlabel("X Coordinates")
+#         plt.ylabel("Y Coordinates")
+#         plt.title("Scatter Plot of X vs Y Coordinates (Original and Flipped)")
+#         plt.legend(loc="upper right", bbox_to_anchor=(1.3, 1))
+#         plt.grid(True)
+#         plt.tight_layout()
+
+#         if output_file:
+           
+
 
 import pandas as pd
 import numpy as np
@@ -294,13 +386,3 @@ class DataAugmenter:
         self.flip_data()
         self.combine_data()
         return self.df_combined
-
-# Usage Example:
-# """
-# augmenter = DataAugmenter(input_csv='input.csv', output_csv='augmented_output.csv')
-# augmenter.augment_data()
-# augmenter.flip_data()
-# augmenter.combine_data()
-# augmenter.save_to_csv()
-# augmenter.plot_trajectories('trajectory_plot.png')
-# """

@@ -54,8 +54,8 @@ app.include_router(camera_router, tags=["Camera"],)
 app.include_router(visionai_router, tags=["Vision"])
 app.include_router(ai_router, tags=["AI"])
 app.include_router(db_router, tags=["DataBase"])
-app.include_router(action_router, tags=["Action DB"])
-app.include_router(grasp_router, tags=["Grasp DB"])
+app.include_router(action_router, tags=["Action DB"],include_in_schema=False)
+app.include_router(grasp_router, tags=["Grasp DB"],include_in_schema=False)
 
 # ---------------------------------------#
 if __name__ == "__main__":

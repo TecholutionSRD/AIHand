@@ -6,7 +6,7 @@ import asyncio
 from fastapi import APIRouter, HTTPException
 from functools import lru_cache
 from pydantic import BaseModel
-from BasicAI.functions.Inference.inference import inference, realtime_inference
+from BasicAI.functions.Inference.inference import inference
 from BasicAI.functions.dataset.preprocessor import PreProcessor
 from VisionAI.functions.vision_detection import GeminiInference
 from Camera.functions.camera_receiver import CameraReceiver
@@ -19,7 +19,7 @@ import pandas as pd
 CONFIG_PATH = "basic_ai_config.yaml"
 CAMERA_CONFIG = "camera_config.yaml"
 VISION_CONFIG = "vision_ai_config.yaml"
-COBOT_CONFIG
+# COBOT_CONFIG
 ai_router = APIRouter(prefix="/AI")
 config = load_config(CONFIG_PATH)
 
@@ -39,9 +39,9 @@ def get_camera_receiver():
     """Cache CameraReceiver instance to avoid repeated instantiation."""
     return CameraReceiver(CAMERA_CONFIG)
 
-@lru_cache()
-def get_cobot_client():
-    return CobotClient(COBOT_CONFIG)
+# @lru_cache()
+# def get_cobot_client():
+#     return CobotClient(COBOT_CONFIG)
 #-------------------------------------------------------------------#
 @ai_router.get("/health")
 async def health():
@@ -216,8 +216,8 @@ async def run_inference(action_name:str, target_classes: list[str]):
 
         if response:
             payload = response.get('payload',{})
-            client = get_cobot_client()
-            client.send_trajectory_data(payload)
+            # client = get_cobot_client()
+            # client.send_trajectory_data(payload)
             return {"status": "success", "message": "Inference completed and trajectory sent", "payload": payload}
         else:
             raise HTTPException(status_code=500, detail="[AI Router] Inference failed")
@@ -225,3 +225,4 @@ async def run_inference(action_name:str, target_classes: list[str]):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"[AI Router] Inference pipeline failed: {str(e)}")
         
+#-------------------------------------------------------------------#

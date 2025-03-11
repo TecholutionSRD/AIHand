@@ -38,6 +38,7 @@ class DatabaseManager:
         config = load_config(config_path)
         self.config = config.get('DataBase', {})
         self.connection_string = self.config.get('URL', 'mongodb://localhost:27017/')
+        print(self.connection_string)
         self.database_name = self.config.get('database_name', 'AIHand')
         self.client = None
         self.db = None

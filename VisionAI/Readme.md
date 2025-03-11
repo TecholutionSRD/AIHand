@@ -1,11 +1,9 @@
-Here’s the README for **VisionAI**, structured for clarity and completeness:  
-
----
-
 # VisionAI
 
 ## Overview  
 **VisionAI** is a microservice designed for real-time computer vision tasks, leveraging Google's **Gemini Model** for object detection and analysis. It integrates with the **Camera** microservice to capture frames, process them, and return structured detection results, including bounding boxes and object classifications.
+
+![alt text](image.png)
 
 ## Features  
 - **Object Detection**: Identifies and localizes objects in images using Gemini.  
@@ -86,7 +84,3 @@ VisionAI relies on the **Camera** microservice for capturing frames. Ensure the 
 
 ## License  
 This project is licensed under the MIT License.  
-
----
-
-Let me know if you need any tweaks! 🚀

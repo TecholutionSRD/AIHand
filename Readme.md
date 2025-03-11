@@ -4,6 +4,8 @@
 
 The AI Hand project is a collection of microservices designed to work together to build a production-grade application. Each microservice is responsible for a specific functionality, allowing for modular development and easy scalability.
 
+![alt text](image.png)
+
 ## Microservices
 
 1. **Camera Service**: Manages all the functions related to the Camera.

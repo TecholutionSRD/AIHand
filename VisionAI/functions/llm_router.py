@@ -8,6 +8,28 @@ from difflib import get_close_matches
 from dotenv import load_dotenv
 import google.generativeai as genai
 
+def get_action_objects(db_config: dict, action_name: str) -> List[str]:
+    """
+    Get valid objects associated with a specific action from the database config.
+    
+    Args:
+        db_config: Database configuration dictionary
+        action_name: Name of the action to look up
+    
+    Returns:
+        List of object names valid for the action
+    """
+    try:
+        # Assuming db_config has a structure with actions and their valid objects
+        actions_config = db_config.get('actions', {})
+        action_data = actions_config.get(action_name, {})
+        return action_data.get('valid_objects', [])
+    except Exception as e:
+        print(f"Error getting action objects: {str(e)}")
+        return []
+
+from Database.functions.db_mannger import DatabaseManager
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir)))
 # from Database_old.functions.db import check_knowledgebase, get_action_objects
 from Config.config import load_config
@@ -82,7 +104,7 @@ def find_closest_matches(query_items: List[str], detected_items: List[str]) -> L
     return list(dict.fromkeys(matches))
 
 # --- UPDATED QUERY ROUTER ---
-def query_router(user_query: str, mode: str, camera, color_frame=None, gemini=None, config=None) -> Dict:
+async def query_router(user_query: str, mode: str, camera, color_frame=None, gemini=None, config=None) -> Dict:
     """
     Maps user queries to available actions and objects using Gemini LLM.
     
@@ -125,8 +147,20 @@ def query_router(user_query: str, mode: str, camera, color_frame=None, gemini=No
         print(f"[LLM Router] User Output: {result}")
 
         if mode == "database":
-            db_config = config.get("DataBase", {})
-            grasp_names, action_names = check_knowledgebase(db_config)
+            db_configs = load_config('db_config.yaml')
+            db_config = db_config.get("DataBase", {})
+            db_manager = DatabaseManager('db_config.yaml')
+            
+            # Get all actions and grasps
+            actions_response = await db_manager.action_orchestrator("list")
+            grasps_response = await db_manager.grasp_orchestrator("list")
+            
+            # Extract names from the response data
+            action_names = [action["action_name"] for action in actions_response.get("data", [])]
+            grasp_names = [grasp["object_name"] for grasp in grasps_response.get("data", [])]
+            
+            # Close database connection
+            db_manager.close()
             print(f"[LLM Router] Grasp Names: {grasp_names}")
             print(f"[LLM Router] Action Names: {action_names}")
 
@@ -172,3 +206,51 @@ def query_router(user_query: str, mode: str, camera, color_frame=None, gemini=No
     except Exception as e:
         print(f"[LLM Router] Error processing query: {str(e)}")
         return {"error": f"Error processing query: {str(e)}"}
+    
+async def validate_task(action_name: str, object_names: List[str]) -> Dict:
+    """
+    Check action and grasp details from database for given action and objects.
+    
+    Args:
+        action_name: Name of the action to look up
+        object_names: List of object names to check
+    
+    Returns:
+        Dictionary containing action details, grasp details and status message
+    """
+    try:
+        db_manager = DatabaseManager('db_config.yaml')
+        
+        # Check action in database
+        action_response = await db_manager.action_orchestrator("get", {"action_name": action_name})
+        
+        if not action_response.get("data"):
+            db_manager.close()
+            return {
+                "status": "error",
+                "message": f"Action '{action_name}' not found in database"
+            }
+            
+        action_details = action_response["data"]
+        grasp_details = []
+        
+        # Check grasp points for each object
+        for obj_name in object_names:
+            grasp_response = await db_manager.grasp_orchestrator("get", {"object_name": obj_name})
+            if grasp_response.get("data"):
+                grasp_details.append(grasp_response["data"])
+                
+        db_manager.close()
+        
+        return {
+            "status": "success",
+            "action_details": action_details,
+            "grasp_details": grasp_details,
+            "message": "Successfully retrieved action and grasp details"
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Error checking action and grasp details: {str(e)}"
+        }

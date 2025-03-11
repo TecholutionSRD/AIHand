@@ -2,6 +2,9 @@
 
 **BasicAI** is an end-to-end pipeline designed to process videos, extract trajectories, train models, and perform inference. It enables users to analyze object movements, predict future positions, and automate trajectory-based decision-making.
 
+![alt text](image.png)
+
+
 ## 🚀 Features
 
 - **PreProcessing Pipeline**: Cleans up dataset folders, renames them, and generates a merged CSV.

@@ -4,6 +4,8 @@
 
 This microservice provides functionalities for camera operations, including capturing images, recording videos, and streaming camera feeds. It is designed for modularity and scalability, supporting both hardware cameras and streamed inputs.
 
+![alt text](image.png)
+
 ## Features
 
 - **Image Capture:** Captures still images from connected cameras.

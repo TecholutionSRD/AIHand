@@ -3,6 +3,8 @@
 ## Overview
 This directory contains the database microservice implementation for the AIHand project, built with FastAPI and MongoDB integration.
 
+![alt text](image.png)
+
 ## Structure
 ```
 Database/
